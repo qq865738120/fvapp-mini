@@ -1,0 +1,83 @@
+<!--index.wxml-->
+<e-transition name="slide-down" isShow='{{ isInit }}' duration='500'>
+<view class="index-page">
+  <e-search
+    catchonsearch='testTap'
+    bgColor='#fff'
+    width='520'
+    buttonText=''
+    placeholder='请输入搜索内容'
+    radius='10'
+    bgColor='#101119'
+    catchonsearch='onSearch'
+    catchonclean='onclean'>
+  </e-search>
+
+  <e-enhance-view
+    bgColor=''
+    height='100'
+    width=''
+    padding='0 53rpx'
+    type='betweenCenter'
+    cus='top-bar'>
+    <view class="top-bar-left">
+      <view class="top-bar-item" data-index="{{0}}" catchtap="onTopBarTap">
+        <text class="top-bar-text {{topBarSelected === 0 && 'top-bar-text-select'}}">最热</text>
+        <e-icon cus="top-bar-icon" name="{{ orderType[0] === 'desc' ? 'dropdown' : 'collapse' }}" size='28rpx' padding='5rpx' color='{{ topBarSelected === 0 ? "#fff" : "rgba(169, 169, 169, 1)" }}' />
+      </view>
+      <view class="top-bar-item" data-index="{{1}}" catchtap="onTopBarTap">
+        <text class="top-bar-text {{topBarSelected === 1 && 'top-bar-text-select'}}">最新</text>
+        <e-icon cus="top-bar-icon" name="{{ orderType[1] === 'desc' ? 'dropdown' : 'collapse' }}" size='28rpx' padding='5rpx' color='{{ topBarSelected === 1 ? "#fff" : "rgba(169, 169, 169, 1)" }}' />
+      </view>
+    </view>
+    <view class="top-bar-item" catchtap="onFilterTap">
+        <text class="top-bar-text">筛选</text>
+        <image class="top-bar-icon" src="/images/icon_shuaixuan.png"></image>
+      </view>
+  </e-enhance-view>
+
+  <scroll-view class="list" scroll-y style="height: {{ listHeight }}" bindscrolltolower="scrollToLower">
+    <view style="padding: 40rpx" wx:if="{{activityListRes.isLoading}}">
+      <e-loading type='doubleBounce' width='50' height='50' color='#666'/>
+    </view>
+    
+    <view class="list-item" wx:if="{{!activityListRes.isLoading}}" wx:for="{{ activityListRes.records }}" wx:key="activityId" data-activity="{{ item }}" catchtap="onGoMore">
+      <image class="list-item-img" lazy-load="{{true}}" src="{{ item.defaultVideoFirstFrameImgSrc }}"></image>
+      <text class="list-item-tit">{{ item.name }}</text>
+      <e-enhance-view type='betweenCenter' margin='30rpx 0 0'>
+        <view class="list-item-left">
+          <e-enhance-text
+            icon='/images/icon_watch.png'
+            iconSize='26'
+            textFontSize='24'
+            text='{{ item.totalPlayCount }}'
+            textColor='#5E5E5E'
+            cus='list-item-left-item'/>
+          <e-enhance-text
+            icon='/images/icon_start_1.png'
+            iconSize='26'
+            textFontSize='24'
+            text='{{ item.totalStarCount }}'
+            textColor='#5E5E5E' />
+        </view>
+        <view class="list-item-right" catchtap="onMoreTap">
+          更多视频
+          <image class="list-item-icon" src="/images/icon_more.png"></image>
+        </view>
+      </e-enhance-view>
+    </view>
+
+    <view wx:if="{{ !activityListRes.isLoading }}">
+      <e-load-more textSize='24' textColor='#333' lineColor='#444' loadingColor='#FE2C54' loading='{{ isLoading ? "true" : "false" }}' text='{{ isLoading ? "加载中" : "没有更多内容了～" }}' cus='load-more' />
+    </view>
+  </scroll-view>
+
+  <a-popup isShow="{{ isInit && !isAuthorization }}"></a-popup>
+</view>
+</e-transition>
+
+<e-transition name="slide-down" isShow='{{ !isInit }}' duration='300'>
+  <view style="margin: 15rpx 0; height: 100%">
+    <e-loading type='threeBounce' color='#FE2C54'/>
+  </view>
+</e-transition>
