@@ -129,7 +129,6 @@
 
 .back-button {
   position: absolute;
-  top: 54rpx;
   z-index: 100;
 }
 

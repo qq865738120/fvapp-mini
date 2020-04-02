@@ -42,6 +42,8 @@ export default class Dowloader {
       }
       const file = getFile(url);
 
+      console.log("file111111", file)
+
       if (file) {
         // 检查文件是否正常，不正常需要重新下载
         wx.getSavedFileInfo({

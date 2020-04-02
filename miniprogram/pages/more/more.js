@@ -124,6 +124,14 @@ Page(connect({
     
   },
 
+  onShareAppMessage() {
+    return {
+      title: getIn(this.data.currentActivity, ["shareTitle"], "-"),
+      path: `/pages/more/more?scene=${getIn(this.data.currentActivity, ["id"], 0)}`,
+      imageUrl: getIn(this.data.currentActivity, ["videoBgImgSrc"], "")
+    }
+  },
+
   async scrollToLower() {
     if (this.data.videoListRes.canLoad) {
       currentPage = currentPage + 1;

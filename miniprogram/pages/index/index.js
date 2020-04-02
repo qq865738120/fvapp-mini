@@ -26,7 +26,7 @@ const connect = mapToData((state) => ({
 
 Page(connect({
   data: {
-    topBarSelected: 0,
+    topBarSelected: 1,
     listHeight: px2Rpx(sysInfo.windowHeight) - 200 + "rpx",
     isLoading: false,
     orderType: ["desc", "desc"] // 活动列表排序状态，desc降序，asc升序
@@ -44,7 +44,7 @@ Page(connect({
   onShow() {
     currentPage = 1;
     this.setData({
-      topBarSelected: 0
+      topBarSelected: 1
     })
   },
 

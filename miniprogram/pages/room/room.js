@@ -3,9 +3,6 @@
  */
 import LastMayday from "./img.js"
 import {
-  genTestUserSig
-} from '../../common/GenerateTestUserSig.js'
-import {
   mapToData
 } from 'minii'
 import {
@@ -26,6 +23,7 @@ const connect = mapToData((state) => ({
   userInfo: state.common.userInfo,
   usersig: state.common.usersig,
   currentVideo: state.common.currentVideo,
+  currentActivity: state.common.currentActivity,
   apiError: state.common.apiError,
   isAuthorization: state.common.isAuthorization,
 }))
@@ -60,6 +58,30 @@ const EVENT_TYPE = {
   PLAY: 4,
   STOP: 5
 }
+
+/**
+ * 视频相关参数
+ */
+const getVideoInfo = (h, w) => {
+  const videoHeight = h || 360;
+  const videoWidth = w || 640;
+  const aspectRatio = orientation === ORIENTATION_TYPE.VERTICAL ? videoWidth / videoHeight : videoHeight / videoWidth; // 视频横宽比
+  let clientVideoWidth = sysInfo.screenWidth; // 视频在客户端中相对宽度
+  let clientVideoHeight = sysInfo.screenWidth / aspectRatio; // 视频在客户端中相对高度
+  let videoTop = (sysInfo.screenHeight - clientVideoHeight) / 2; // 视频在客户端中顶部与屏幕顶部距离
+  let videoLeft = (sysInfo.screenWidth - clientVideoWidth) / 2; // 视频在客户端中最左边距离屏幕左边距离
+
+  return {
+    videoHeight,
+    videoWidth,
+    aspectRatio,
+    clientVideoWidth,
+    clientVideoHeight,
+    videoTop,
+    videoLeft
+  }
+}
+
 
 Page(connect({
 
@@ -101,15 +123,70 @@ Page(connect({
     if (this.data.isStop) {
       return;
     }
-
     const {
-      scale
+      scale,
+      touches
     } = e.detail;
     console.log("捏", scale);
+
+    const {
+      videoHeight,
+      videoWidth,
+      aspectRatio,
+      clientVideoWidth,
+      clientVideoHeight,
+      videoTop,
+      videoLeft
+    } = getVideoInfo(); // 获取视频信息
+    let centerPointX = (Math.abs(touches[0].clientX - touches[1].clientX) / 2) + Math.min(touches[0].clientX, touches[1].clientX);
+    let centerPointY = (Math.abs(touches[0].clientY - touches[1].clientY) / 2) + Math.min(touches[0].clientY, touches[1].clientY);
+    console.log("centerPointX111", centerPointX);
+    console.log("centerPointY111", centerPointY);
+    /**
+     * 越界处理
+     */
+    if (centerPointX >= videoLeft + clientVideoWidth) {
+      centerPointX = videoLeft + clientVideoWidth;
+    } else if (centerPointX <= videoLeft) {
+      centerPointX = videoLeft;
+    } else if (centerPointY >= videoTop + clientVideoHeight) {
+      centerPointY = videoTop + clientVideoHeight
+    } else if (centerPointY <= videoTop) {
+      centerPointY = videoTop
+    }
+    let videoX = (centerPointX - videoLeft) * videoWidth / clientVideoWidth; // 视频坐标系的x坐标值
+    let videoY = (centerPointY - videoTop) * videoHeight / clientVideoHeight; // 视频坐标系的y坐标值
+    if (orientation === ORIENTATION_TYPE.HORIZONTAL) {
+      const temp = centerPointX;
+      centerPointX = centerPointY;
+      centerPointY = clientVideoWidth - temp;
+      videoX = (centerPointX - videoTop) * clientVideoWidth / videoWidth;
+      videoY = (centerPointY - videoLeft) * clientVideoHeight / videoHeight;
+    }
+
+    console.log("sysInfo", sysInfo)
+    console.log("clientVideoWidth", clientVideoWidth)
+    console.log("clientVideoHeight", clientVideoHeight)
+    console.log("aspectRatio", aspectRatio);
+    console.log("videoTop", videoTop);
+    console.log("videoLeft", videoLeft);
+    console.log("centerPointX", centerPointX);
+    console.log("centerPointY", centerPointY);
+
+
+    // const x = orientation === ORIENTATION_TYPE.VERTICAL ? videoX : videoY; // 如果过为横屏，需要旋转坐标系
+    // const y = orientation === ORIENTATION_TYPE.VERTICAL ? videoY : videoHeight - videoX;
+    const x = videoX;
+    const y = videoY;
+
     const msg = {
       type: scale > 1 ? EVENT_TYPE.REDUCE : EVENT_TYPE.ZOOM,
       percent: parseInt((scale > 1 ? scale - 0.5 : scale) * 2),
-      roomID: getIn(this.data.currentVideo, ["roomID"])
+      roomID: getIn(this.data.currentVideo, ["roomID"]),
+      x,
+      y,
+      width: videoWidth,
+      height: videoHeight
     };
     console.log("wss message", JSON.stringify(msg))
     this.sendSocketMessage(JSON.stringify(msg))
@@ -127,13 +204,19 @@ Page(connect({
   },
 
   onDoubleTap(e) {
-    this.setData({ isStop: !this.data.isStop })
+    this.setData({
+      isStop: !this.data.isStop
+    })
 
     console.log("双击", this.data.isStop);
     const msg = {
       type: this.data.isStop ? EVENT_TYPE.STOP : EVENT_TYPE.PLAY,
       percent: 1,
-      roomID: getIn(this.data.currentVideo, ["roomID"])
+      roomID: getIn(this.data.currentVideo, ["roomID"]),
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0
     };
     console.log("wss message", JSON.stringify(msg))
     this.sendSocketMessage(JSON.stringify(msg))
@@ -155,13 +238,21 @@ Page(connect({
         msg = {
           type: deltaX > 0 ? EVENT_TYPE.RIGHT : EVENT_TYPE.LEFT,
           percent: parseInt((deltaX > 0 ? deltaX : -deltaX) / 750 * 10),
-          roomID: getIn(this.data.currentVideo, ["roomID"])
+          roomID: getIn(this.data.currentVideo, ["roomID"]),
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0
         };
       } else if (orientation === ORIENTATION_TYPE.HORIZONTAL) {
         msg = {
           type: deltaY > 0 ? EVENT_TYPE.RIGHT : EVENT_TYPE.LEFT,
           percent: parseInt((deltaY > 0 ? deltaY : -deltaY) / 750 * 10),
-          roomID: getIn(this.data.currentVideo, ["roomID"])
+          roomID: getIn(this.data.currentVideo, ["roomID"]),
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0
         };
       }
       console.log("wss message", JSON.stringify(msg))
@@ -179,9 +270,12 @@ Page(connect({
     })
   },
 
-  // onShareWarpTap(e) {
-  //   this.setData({ isShowShare: false })
-  // },
+  onShareWarpTap(e) {
+    console.log("eeee", 111111)
+    this.setData({
+      isShowShare: false
+    })
+  },
 
   onFriendTap(e) {
     this.setData({
@@ -193,31 +287,49 @@ Page(connect({
     this.setData({
       isShowShare: false
     })
+    console.log("shareImagePath", shareImagePath)
     if (!isNull(shareImagePath)) {
-      const setting = await wx.getSetting();
-      console.log(setting)
-      if (setting.authSetting['scope.writePhotosAlbum']) {
-        // 已经授权 this.isAuthorization = true;
-        wx.saveImageToPhotosAlbum({
-          filePath: shareImagePath,
-          success(res) {
-            console.log(res.errMsg)
+      wx.getSetting({
+        success: setting => {
+          console.log(setting)
+          if (setting.authSetting['scope.writePhotosAlbum']) {
+            // 已经授权 this.isAuthorization = true;
+            wx.saveImageToPhotosAlbum({
+              filePath: shareImagePath,
+              success(res) {
+                console.log(res.errMsg)
+                wx.showToast({
+                  title: '保存成功'
+                })
+              }
+            })
+          } else {
+            // 未授权 this.isAuthorization = false;
+            wx.saveImageToPhotosAlbum({
+              filePath: shareImagePath,
+              success(res) {
+                console.log(res.errMsg)
+                wx.showToast({
+                  title: '保存成功'
+                })
+              }
+            })
+            console.log("false")
+            this.setData({
+              isShowDialog: true
+            })
           }
-        })
-      } else {
-        // 未授权 this.isAuthorization = false;
-        wx.saveImageToPhotosAlbum({
-          filePath: shareImagePath,
-          success(res) {
-            console.log(res.errMsg)
-          }
-        })
-        console.log("false")
-        that.setData({
-          isShowDialog: true
-        })
-      }
+        },
+        fail: err => {
+          console.log("生成海报打开设置失败", err)
+          wx.showToast({
+            title: '生成海报失败',
+            icon: 'none'
+          })
+        }
+      });
     } else {
+      console.log("海报未生成")
       wx.showToast({
         title: '生成海报失败',
         icon: 'none'
@@ -245,7 +357,7 @@ Page(connect({
         videoId: videoId ? videoId : getIn(this.data.currentVideo, ["id"], 0)
       })
     }
-    
+
     if (isNull(res)) {
       // wx.showToast({
       //   title: '收藏成功',
@@ -265,7 +377,7 @@ Page(connect({
       })
     } else {
       wx.navigateBack({
-        delta: 1,
+        url: '/pages/more/more',
       })
     }
   },
@@ -289,32 +401,49 @@ Page(connect({
         header: {
           "Content-Type": "video/mpeg4"
         },
-        async success(res) {
+        success(res) {
+          console.log("download res", res)
           if (res.statusCode === 200) {
             console.log("res.tempFilePath", res.tempFilePath)
-            const setting = await wx.getSetting();
-            console.log(setting)
-            if (setting.authSetting['scope.writePhotosAlbum']) {
-              // 已经授权 this.isAuthorization = true;
-              wx.saveVideoToPhotosAlbum({
-                filePath: res.tempFilePath,
-                success(res) {
-                  console.log(res.errMsg)
+            wx.getSetting({
+              success: setting => {
+                console.log(setting)
+                if (setting.authSetting['scope.writePhotosAlbum']) {
+                  // 已经授权 this.isAuthorization = true;
+                  wx.saveVideoToPhotosAlbum({
+                    filePath: res.tempFilePath,
+                    success(res) {
+                      wx.showToast({
+                        title: '保存成功！',
+                      })
+                      console.log(res.errMsg)
+                    }
+                  })
+                } else {
+                  // 未授权 this.isAuthorization = false;
+                  wx.saveVideoToPhotosAlbum({
+                    filePath: res.tempFilePath,
+                    success(res) {
+                      wx.showToast({
+                        title: '保存成功！',
+                      })
+                      console.log(res.errMsg)
+                    }
+                  })
+                  console.log("false")
+                  that.setData({
+                    isShowDialog: true,
+                    downloadText: "保存"
+                  })
                 }
-              })
-            } else {
-              // 未授权 this.isAuthorization = false;
-              wx.saveVideoToPhotosAlbum({
-                filePath: res.tempFilePath,
-                success(res) {
-                  console.log(res.errMsg)
-                }
-              })
-              console.log("false")
-              that.setData({
-                isShowDialog: true
-              })
-            }
+              },
+              fail: err => {
+                wx.showToast({
+                  icon: "none",
+                  title: '下载失败！',
+                })
+              }
+            });
           }
         },
         fail(res) {
@@ -356,7 +485,7 @@ Page(connect({
       videoId = scene;
       console.log("videoId", videoId)
     }
-    
+    console.log("sysInfo", sysInfo)
     let lastState = 0;
     let lastTime = Date.now();
 
@@ -392,13 +521,13 @@ Page(connect({
         // 如果手机平躺，保持原状态不变，40容错率
         if ((absPitch > 140 || absPitch < 40)) {
           nowState = lastState;
-        } else if (Pitch < 0) { /*收集竖向正立的情况*/
+        } else if (Pitch < 0) {
+          /*收集竖向正立的情况*/
           nowState = 0;
         } else {
           nowState = lastState;
         }
-      }
-      else {
+      } else {
         nowState = lastState;
       }
 
@@ -428,7 +557,7 @@ Page(connect({
     });
 
 
-    const timer1 = setInterval(async() => {
+    const timer1 = setInterval(async () => {
       if (this.data.isInit) {
         clearInterval(timer1);
 
@@ -479,7 +608,7 @@ Page(connect({
                   console.log("---------wss连接失败---------", res)
                 }
               })
-              socketTask.onClose(function(res) {
+              socketTask.onClose(function (res) {
                 console.log('WebSocket 已关闭！')
               })
               socketTask.onError(res => {
@@ -489,7 +618,7 @@ Page(connect({
                   icon: 'none'
                 })
               })
-              socketTask.onOpen(function(res) {
+              socketTask.onOpen(function (res) {
                 console.log("----------wss管道打开成功----------", res)
                 socketOpen = true
                 for (let i = 0; i < socketMsgQueue.length; i++) {
@@ -519,7 +648,8 @@ Page(connect({
     // 初始化事件订阅
     this.trtcComponent.on(TRTC_EVENT.LOCAL_JOIN, (event) => {
       console.log('******* 加入房间', this.trtcComponent.getRemoteUserList())
-
+      this.trtcComponent.publishLocalVideo()
+      this.trtcComponent.publishLocalAudio()
     })
     this.trtcComponent.on(TRTC_EVENT.LOCAL_LEAVE, (event) => {
       console.log('* room LOCAL_LEAVE', event)
@@ -597,7 +727,7 @@ Page(connect({
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload: function() {
+  onUnload: function () {
     socketTask && socketTask.close({
       complete: res => console.log("------关闭wss------", res)
     })

@@ -9,7 +9,8 @@
 
 .player {
   width: 100vw;
-  height: 100vh;
+  /* height: 100vh; */
+  height: 420rpx;
 }
 
 .tip-toast {
@@ -61,7 +62,6 @@
 
 .back-button {
   position: absolute;
-  top: 54rpx;
   z-index: 1000;
 }
 
@@ -105,7 +105,9 @@
 .share-warp {
   width: 100vw;
   height: 100vh;
-  position: relative;
+  position: absolute;
+  top: 0rpx;
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 .share-popup {
@@ -184,4 +186,9 @@ button::after {
   left: 46%;
   z-index: 100;
   opacity: 0.3
+}
+
+.painter {
+  position: absolute;
+  top: -2000rpx;
 }

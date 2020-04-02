@@ -25,7 +25,7 @@ class CommonStore {
     this.userInfo = {};
     this.isInit = false; // 是否初始化完成
     this.isAuthorization = false; // 是否已授权
-    this.orderField = "degree"; // activity排序、degree为最热、update_time为最新
+    this.orderField = "update_time"; // activity排序、degree为最热、update_time为最新
     this.activityListRes = {}; // activity列表
     this.activityType = {
       type: -1,

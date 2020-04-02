@@ -14,14 +14,6 @@ Page({
   },
 
   async onLoad() {
-    // try {
-      const scope = await wxPro.authorize({ scope: "scope.userInfo" })
-      console.log("scope", scope)
-    const info = await wxPro.getUserInfo();
-      console.log(info);
-    // } catch {
-    //   console.log("e");
-    // }
     
   },
 

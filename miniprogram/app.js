@@ -7,10 +7,11 @@ import {
 } from '/common/enum.js';
 import axios from 'axios'
 import mpAdapter from 'axios-miniprogram-adapter'
+import config from "./config"
 axios.defaults.adapter = mpAdapter
+
 let $axios = axios.create({
-  // baseURL: 'http://api.pintu360.net.cn:39001/mock/28',
-  baseURL: 'https://fvcms.iotnc.cn',
+  baseURL: config.host,
   timeout: 10000,
   headers: { 
     "Content-Type": "application/json",

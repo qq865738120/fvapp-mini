@@ -21,13 +21,13 @@
     type='betweenCenter'
     cus='top-bar'>
     <view class="top-bar-left">
-      <view class="top-bar-item" data-index="{{0}}" catchtap="onTopBarTap">
-        <text class="top-bar-text {{topBarSelected === 0 && 'top-bar-text-select'}}">最热</text>
-        <e-icon cus="top-bar-icon" name="{{ orderType[0] === 'desc' ? 'dropdown' : 'collapse' }}" size='28rpx' padding='5rpx' color='{{ topBarSelected === 0 ? "#fff" : "rgba(169, 169, 169, 1)" }}' />
-      </view>
       <view class="top-bar-item" data-index="{{1}}" catchtap="onTopBarTap">
         <text class="top-bar-text {{topBarSelected === 1 && 'top-bar-text-select'}}">最新</text>
         <e-icon cus="top-bar-icon" name="{{ orderType[1] === 'desc' ? 'dropdown' : 'collapse' }}" size='28rpx' padding='5rpx' color='{{ topBarSelected === 1 ? "#fff" : "rgba(169, 169, 169, 1)" }}' />
+      </view>
+      <view class="top-bar-item" data-index="{{0}}" catchtap="onTopBarTap">
+        <text class="top-bar-text {{topBarSelected === 0 && 'top-bar-text-select'}}">最热</text>
+        <e-icon cus="top-bar-icon" name="{{ orderType[0] === 'desc' ? 'dropdown' : 'collapse' }}" size='28rpx' padding='5rpx' color='{{ topBarSelected === 0 ? "#fff" : "rgba(169, 169, 169, 1)" }}' />
       </view>
     </view>
     <view class="top-bar-item" catchtap="onFilterTap">
