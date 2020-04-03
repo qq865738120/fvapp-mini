@@ -176,11 +176,11 @@ Page(connect({
 
     // const x = orientation === ORIENTATION_TYPE.VERTICAL ? videoX : videoY; // 如果过为横屏，需要旋转坐标系
     // const y = orientation === ORIENTATION_TYPE.VERTICAL ? videoY : videoHeight - videoX;
-    const x = videoX;
-    const y = videoY;
+    const x = parseInt(videoX);
+    const y = parseInt(videoY);
 
     const msg = {
-      type: scale > 1 ? EVENT_TYPE.REDUCE : EVENT_TYPE.ZOOM,
+      type: scale > 1 ? EVENT_TYPE.ZOOM : EVENT_TYPE.REDUCE,
       percent: parseInt((scale > 1 ? scale - 0.5 : scale) * 2),
       roomID: getIn(this.data.currentVideo, ["roomID"]),
       x,

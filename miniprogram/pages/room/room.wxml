@@ -1,12 +1,12 @@
 <!--miniprogram/pages/room/room.wxml-->
 <!-- 在模版上放置标签 -->
-<view class="page-room" style="background: url({{ currentVideo.type !== 1 && currentActivity.videoBgImgSrc }})">
+<view class="page-room {{ currentActivity.videoBgTop === -1 && 'flex-center' }}" style="background: url({{ currentVideo.type !== 1 && currentActivity.videoBgImgSrc }});">
 
   <trtc-room wx:if="{{currentVideo.type === 1}}" id="trtcroom" config="{{trtcConfig}}" catchpinch="onPinch" catchswipe="onSwipe" catchontap="onTap" catchmove="onMove" catchondoubletap="onDoubleTap"></trtc-room>
 
   <!-- <image wx:if="{{currentVideo.type === 1 && isStop}}" class="play-icon" src="/images/icon_bofangliang.png"></image> -->
 
-  <video wx:if="{{currentVideo.type === 2}}" class="player" style="margin-top: {{ currentActivity.videoBgTop }}%; height: {{ 750 / 16 * 9 }}rpx" autoplay="{{true}}" controls="{{true}}" src="{{ currentVideo.pullStreamUrl }}"></video>
+  <video wx:if="{{currentVideo.type === 2}}" class="player" style="margin-top: {{ currentActivity.videoBgTop !== -1 && currentActivity.videoBgTop}}%; height: {{ 750 / 16 * 9 }}rpx" autoplay="{{true}}" controls="{{true}}" src="{{ currentVideo.pullStreamUrl }}"></video>
 
   <view class="bottom-bar" wx:if="{{isShowBar}}">
     <view class="bottom-bar-title">{{currentVideo.name}}</view>
@@ -30,7 +30,8 @@
   <view class="share-warp" wx:if="{{ isShowShare }}" catchtap="onShareWarpTap">
     <view class="share-popup" catchtap="">
       <view class="share-popup-title">
-        <view class="share-popup-title-line"></view>这么棒的视频，赶快分享给好友吧
+        <view class="share-popup-title-line"></view>
+        这么棒的视频，赶快分享给好友吧
         <view class="share-popup-title-line"></view>
       </view>
       <view class="share-popup-content">

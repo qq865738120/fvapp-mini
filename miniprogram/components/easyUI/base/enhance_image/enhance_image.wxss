@@ -1,4 +1,0 @@
-/* component/base/enhance_image/enhance_image.wxss */
-.image {
-  position: absolute;
-}

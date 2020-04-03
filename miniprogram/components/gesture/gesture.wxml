@@ -1,2 +1,0 @@
-<!--components/gesture/gesture.wxml-->
-<cover-view class="cover-view" bindtouchstart="touchStart" bindtouchmove="touchMove" bindtouchend="touchEnd"></cover-view>
