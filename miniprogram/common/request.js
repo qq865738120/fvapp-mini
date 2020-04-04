@@ -82,6 +82,13 @@ class Request {
   getActivityInfo = async params => {
     return await this.$axios.post("/mini/activity/info", params);
   }
+
+  /**
+   * 获取海报图片
+   */
+  getSharePoster = async params => {
+    return await this.$axios.post("/mini/video/gen_poster", params);
+  }
 }
 
 export default Request;

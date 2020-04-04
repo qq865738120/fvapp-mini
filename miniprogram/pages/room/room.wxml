@@ -6,7 +6,7 @@
 
   <!-- <image wx:if="{{currentVideo.type === 1 && isStop}}" class="play-icon" src="/images/icon_bofangliang.png"></image> -->
 
-  <video wx:if="{{currentVideo.type === 2}}" class="player" style="margin-top: {{ currentActivity.videoBgTop !== -1 && currentActivity.videoBgTop}}%; height: {{ 750 / 16 * 9 }}rpx" autoplay="{{true}}" controls="{{true}}" src="{{ currentVideo.pullStreamUrl }}"></video>
+  <video id="video" wx:if="{{currentVideo.type === 2}}" loop="{{ true }}" class="player" style="margin-top: {{ currentActivity.videoBgTop !== -1 && currentActivity.videoBgTop}}%; height: {{ 750 / currentActivity.videoWidthPixel * currentActivity.videoHeightPixel }}rpx" autoplay="{{true}}" controls="{{true}}" src="{{ currentVideo.pullStreamUrl }}"></video>
 
   <view class="bottom-bar" wx:if="{{isShowBar}}">
     <view class="bottom-bar-title">{{currentVideo.name}}</view>
@@ -56,9 +56,9 @@
     </view>
   </view>
 
-  <view class="painter">
+  <!-- <view class="painter">
     <painter palette="{{imgData}}" bindimgOK="onImgOK" bindimgErr="onImgErr" />
-  </view>
+  </view> -->
   
 
   <block wx:if="{{ isAuthorization  }}">

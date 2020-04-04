@@ -41,6 +41,8 @@ let timer2;
 let videoDetail; // 远端视频推送信息
 let orientation = "vertical"; // 手机方向
 
+let lastTime = Date.now();
+
 const ORIENTATION_TYPE = {
   VERTICAL: "vertical",
   HORIZONTAL: "horizontal"
@@ -66,10 +68,10 @@ const getVideoInfo = (h, w) => {
   const videoHeight = h || 360;
   const videoWidth = w || 640;
   const aspectRatio = orientation === ORIENTATION_TYPE.VERTICAL ? videoWidth / videoHeight : videoHeight / videoWidth; // 视频横宽比
-  let clientVideoWidth = sysInfo.screenWidth; // 视频在客户端中相对宽度
-  let clientVideoHeight = sysInfo.screenWidth / aspectRatio; // 视频在客户端中相对高度
-  let videoTop = (sysInfo.screenHeight - clientVideoHeight) / 2; // 视频在客户端中顶部与屏幕顶部距离
-  let videoLeft = (sysInfo.screenWidth - clientVideoWidth) / 2; // 视频在客户端中最左边距离屏幕左边距离
+  let clientVideoWidth = orientation === ORIENTATION_TYPE.VERTICAL ? sysInfo.screenWidth : sysInfo.screenWidth / aspectRatio; // 视频在客户端中相对宽度
+  let clientVideoHeight = orientation === ORIENTATION_TYPE.VERTICAL ? sysInfo.screenWidth / aspectRatio : sysInfo.screenWidth; // 视频在客户端中相对高度
+  let videoTop =  orientation === ORIENTATION_TYPE.VERTICAL ? (sysInfo.screenHeight - clientVideoHeight) / 2 : 0; // 视频在客户端中顶部与屏幕顶部距离
+  let videoLeft = orientation === ORIENTATION_TYPE.VERTICAL ? 0 : (sysInfo.screenHeight - clientVideoWidth) / 2; // 视频在客户端中最左边距离屏幕左边距离
 
   return {
     videoHeight,
@@ -119,7 +121,14 @@ Page(connect({
     })
   },
 
+  /**
+   * 缩放手势
+   */
   onPinch(e) {
+    const now = Date.now();
+    if (now - lastTime < 200) return;
+    lastTime = now;
+
     if (this.data.isStop) {
       return;
     }
@@ -137,32 +146,48 @@ Page(connect({
       clientVideoHeight,
       videoTop,
       videoLeft
-    } = getVideoInfo(); // 获取视频信息
+    } = getVideoInfo(this.data.currentVideo.videoHeightPixel, this.data.currentVideo.videoWidthPixel); // 获取视频信息
     let centerPointX = (Math.abs(touches[0].clientX - touches[1].clientX) / 2) + Math.min(touches[0].clientX, touches[1].clientX);
     let centerPointY = (Math.abs(touches[0].clientY - touches[1].clientY) / 2) + Math.min(touches[0].clientY, touches[1].clientY);
-    console.log("centerPointX111", centerPointX);
-    console.log("centerPointY111", centerPointY);
+
     /**
      * 越界处理
+     * 超出视频边界则将中心点重置到边界线上
      */
-    if (centerPointX >= videoLeft + clientVideoWidth) {
-      centerPointX = videoLeft + clientVideoWidth;
-    } else if (centerPointX <= videoLeft) {
-      centerPointX = videoLeft;
-    } else if (centerPointY >= videoTop + clientVideoHeight) {
-      centerPointY = videoTop + clientVideoHeight
-    } else if (centerPointY <= videoTop) {
-      centerPointY = videoTop
+    if (orientation === ORIENTATION_TYPE.VERTICAL) { // 手机竖向越界处理
+      if (centerPointX >= videoLeft + clientVideoWidth) {
+        centerPointX = videoLeft + clientVideoWidth;
+      } else if (centerPointX <= videoLeft) {
+        centerPointX = videoLeft;
+      } else if (centerPointY >= videoTop + clientVideoHeight) {
+        centerPointY = videoTop + clientVideoHeight
+      } else if (centerPointY <= videoTop) {
+        centerPointY = videoTop
+      }
+    } else { // 手机横向越界处理
+      if (centerPointX >= videoTop + clientVideoHeight) {
+        centerPointX = videoTop + clientVideoHeight;
+      } else if (centerPointX <= videoTop) {
+        centerPointX = videoTop;
+      } else if (centerPointY >= videoLeft + clientVideoWidth) {
+        centerPointY = videoLeft + clientVideoWidth
+      } else if (centerPointY <= videoLeft) {
+        centerPointY = videoLeft
+      }
     }
-    let videoX = (centerPointX - videoLeft) * videoWidth / clientVideoWidth; // 视频坐标系的x坐标值
-    let videoY = (centerPointY - videoTop) * videoHeight / clientVideoHeight; // 视频坐标系的y坐标值
+
+    /**
+     * 如果是横屏模式下，则需要将转换坐标系，将视频坐标系远点顺时针
+     * 方向旋转90度然后沿y轴负方向平移一个视频高度。且保持点在屏幕
+     * 坐标系中的坐标不变。
+     */
     if (orientation === ORIENTATION_TYPE.HORIZONTAL) {
       const temp = centerPointX;
       centerPointX = centerPointY;
-      centerPointY = clientVideoWidth - temp;
-      videoX = (centerPointX - videoTop) * clientVideoWidth / videoWidth;
-      videoY = (centerPointY - videoLeft) * clientVideoHeight / videoHeight;
+      centerPointY = -temp + clientVideoHeight;
     }
+    let videoX = (centerPointX - videoLeft) * videoWidth / clientVideoWidth; // 实际视频坐标系的x坐标值
+    let videoY = (centerPointY - videoTop) * videoHeight / clientVideoHeight; // 实际视频坐标系的y坐标值
 
     console.log("sysInfo", sysInfo)
     console.log("clientVideoWidth", clientVideoWidth)
@@ -173,15 +198,12 @@ Page(connect({
     console.log("centerPointX", centerPointX);
     console.log("centerPointY", centerPointY);
 
-
-    // const x = orientation === ORIENTATION_TYPE.VERTICAL ? videoX : videoY; // 如果过为横屏，需要旋转坐标系
-    // const y = orientation === ORIENTATION_TYPE.VERTICAL ? videoY : videoHeight - videoX;
     const x = parseInt(videoX);
     const y = parseInt(videoY);
 
     const msg = {
       type: scale > 1 ? EVENT_TYPE.ZOOM : EVENT_TYPE.REDUCE,
-      percent: parseInt((scale > 1 ? scale - 0.5 : scale) * 2),
+      percent: 1,
       roomID: getIn(this.data.currentVideo, ["roomID"]),
       x,
       y,
@@ -222,6 +244,10 @@ Page(connect({
     this.sendSocketMessage(JSON.stringify(msg))
   },
 
+  /**
+   * 滑动手势
+   * @param {} e 
+   */
   onMove(e) {
     if (this.data.isStop) {
       return;
@@ -287,47 +313,59 @@ Page(connect({
     this.setData({
       isShowShare: false
     })
-    console.log("shareImagePath", shareImagePath)
-    if (!isNull(shareImagePath)) {
-      wx.getSetting({
-        success: setting => {
-          console.log(setting)
-          if (setting.authSetting['scope.writePhotosAlbum']) {
-            // 已经授权 this.isAuthorization = true;
-            wx.saveImageToPhotosAlbum({
-              filePath: shareImagePath,
-              success(res) {
-                console.log(res.errMsg)
-                wx.showToast({
-                  title: '保存成功'
+    wx.showLoading({
+      title: '加载中...',
+    })
+    const { posterUrl } = await commonStore.refectGetSharePoster({ videoId: getIn(this.data, ["currentVideo", "id"], 0) });
+    console.log("posterUrl", posterUrl)
+    wx.hideLoading();
+    if (!isNull(posterUrl)) {
+      wx.getImageInfo({
+        src: posterUrl,
+        success: res => {
+          const { path } = res;
+          console.log("临时图片路径", path);
+          wx.getSetting({
+            success: setting => {
+              console.log(setting)
+              if (setting.authSetting['scope.writePhotosAlbum']) {
+                // 已经授权 this.isAuthorization = true;
+                wx.saveImageToPhotosAlbum({
+                  filePath: path,
+                  success(res) {
+                    console.log(res.errMsg)
+                    wx.showToast({
+                      title: '保存成功'
+                    })
+                  }
+                })
+              } else {
+                // 未授权 this.isAuthorization = false;
+                wx.saveImageToPhotosAlbum({
+                  filePath: path,
+                  success(res) {
+                    console.log(res.errMsg)
+                    wx.showToast({
+                      title: '保存成功'
+                    })
+                  }
+                })
+                console.log("false")
+                this.setData({
+                  isShowDialog: true
                 })
               }
-            })
-          } else {
-            // 未授权 this.isAuthorization = false;
-            wx.saveImageToPhotosAlbum({
-              filePath: shareImagePath,
-              success(res) {
-                console.log(res.errMsg)
-                wx.showToast({
-                  title: '保存成功'
-                })
-              }
-            })
-            console.log("false")
-            this.setData({
-              isShowDialog: true
-            })
-          }
-        },
-        fail: err => {
-          console.log("生成海报打开设置失败", err)
-          wx.showToast({
-            title: '生成海报失败',
-            icon: 'none'
-          })
+            },
+            fail: err => {
+              console.log("生成海报打开设置失败", err)
+              wx.showToast({
+                title: '生成海报失败',
+                icon: 'none'
+              })
+            }
+          });
         }
-      });
+      })
     } else {
       console.log("海报未生成")
       wx.showToast({
@@ -485,10 +523,12 @@ Page(connect({
       videoId = scene;
       console.log("videoId", videoId)
     }
-    console.log("sysInfo", sysInfo)
-    let lastState = 0;
-    let lastTime = Date.now();
 
+
+    /**
+     * 监听手机方向改变
+     */
+    let lastState = 0;
     wx.startAccelerometer();
     wx.onAccelerometerChange((res) => {
       const now = Date.now();
@@ -531,6 +571,8 @@ Page(connect({
         nowState = lastState;
       }
 
+      const videoContext = wx.createVideoContext("video", this);
+
       // 状态变化时，触发
       if (nowState !== lastState) {
         lastState = nowState;
@@ -538,25 +580,37 @@ Page(connect({
           console.log('change:横屏');
           // 设置视频方向
           orientation = "horizontal";
-          this.trtcComponent && this.trtcComponent.setViewOrientation({
-            userID: videoDetail.userID,
-            streamType: videoDetail.streamType,
-            orientation: 'horizontal' // 竖向：vertical，横向：horizontal
-          })
+          if (this.data.currentVideo.type === 2) { // 子弹时间
+            videoContext.requestFullScreen({ direction: 90 })
+          } else if (this.data.currentVideo.type === 1) { // 自由视点
+            this.trtcComponent && this.trtcComponent.setViewOrientation({
+              userID: videoDetail.userID,
+              streamType: videoDetail.streamType,
+              orientation: 'horizontal' // 竖向：vertical，横向：horizontal
+            })
+            this.setData({ isShowBar: false })
+          }
         } else {
           console.log('change:竖屏');
           // 设置视频方向
           orientation = "vertical";
-          this.trtcComponent && this.trtcComponent.setViewOrientation({
-            userID: videoDetail.userID,
-            streamType: videoDetail.streamType,
-            orientation: 'vertical' // 竖向：vertical，横向：horizontal
-          })
+          if (this.data.currentVideo.type === 2) { // 子弹时间
+            videoContext.exitFullScreen()
+          } else if (this.data.currentVideo.type === 1) { // 自由视点
+            this.trtcComponent && this.trtcComponent.setViewOrientation({
+              userID: videoDetail.userID,
+              streamType: videoDetail.streamType,
+              orientation: 'vertical' // 竖向：vertical，横向：horizontal
+            })
+            this.setData({ isShowBar: true })
+          }
         }
       }
     });
 
-
+    /**
+     * 页面初始化相关操作
+     */
     const timer1 = setInterval(async () => {
       if (this.data.isInit) {
         clearInterval(timer1);
@@ -632,14 +686,14 @@ Page(connect({
       }
     }, 100);
 
-    const timer2 = setInterval(() => {
-      if (!isEmptyObj(this.data.currentVideo)) {
-        clearInterval(timer2);
-        this.setData({
-          imgData: new LastMayday().palette(this.data.currentVideo)
-        })
-      }
-    }, 500)
+    // const timer2 = setInterval(() => {
+    //   if (!isEmptyObj(this.data.currentVideo)) {
+    //     clearInterval(timer2);
+    //     this.setData({
+    //       imgData: new LastMayday().palette(this.data.currentVideo)
+    //     })
+    //   }
+    // }, 500)
   },
 
   bindTRTCRoomEvent() {
@@ -648,8 +702,8 @@ Page(connect({
     // 初始化事件订阅
     this.trtcComponent.on(TRTC_EVENT.LOCAL_JOIN, (event) => {
       console.log('******* 加入房间', this.trtcComponent.getRemoteUserList())
-      this.trtcComponent.publishLocalVideo()
-      this.trtcComponent.publishLocalAudio()
+      // this.trtcComponent.publishLocalVideo()
+      // this.trtcComponent.publishLocalAudio()
     })
     this.trtcComponent.on(TRTC_EVENT.LOCAL_LEAVE, (event) => {
       console.log('* room LOCAL_LEAVE', event)

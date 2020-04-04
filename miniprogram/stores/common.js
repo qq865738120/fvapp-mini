@@ -258,6 +258,13 @@ class CommonStore {
   async refectDoVideoStar(params) {
     return await this.request.doVideoStar(params);
   }
+
+  /**
+   * 视频收藏
+   */
+  async refectGetSharePoster(params) {
+    return await this.request.getSharePoster(params);
+  }
 }
 
 export default observe(new CommonStore(), 'common')
