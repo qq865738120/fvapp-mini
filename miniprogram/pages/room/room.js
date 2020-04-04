@@ -43,6 +43,8 @@ let orientation = "vertical"; // 手机方向
 
 let lastTime = Date.now();
 
+let step = 0 // 缩放步进
+
 const ORIENTATION_TYPE = {
   VERTICAL: "vertical",
   HORIZONTAL: "horizontal"
@@ -125,9 +127,9 @@ Page(connect({
    * 缩放手势
    */
   onPinch(e) {
-    const now = Date.now();
-    if (now - lastTime < 200) return;
-    lastTime = now;
+    // const now = Date.now();
+    // if (now - lastTime < 200) return;
+    // lastTime = now;
 
     if (this.data.isStop) {
       return;
@@ -137,6 +139,10 @@ Page(connect({
       touches
     } = e.detail;
     console.log("捏", scale);
+    const myStep = scale > 1 ? scale - 1 : scale;
+    step += (myStep < 0 ? 0 : myStep);
+    if (step < 1) return;
+    step = 0;
 
     const {
       videoHeight,
@@ -577,7 +583,7 @@ Page(connect({
       if (nowState !== lastState) {
         lastState = nowState;
         if (nowState === 1) {
-          console.log('change:横屏');
+          console.log('change:横屏', this.data.currentVideo.type);
           // 设置视频方向
           orientation = "horizontal";
           if (this.data.currentVideo.type === 2) { // 子弹时间
