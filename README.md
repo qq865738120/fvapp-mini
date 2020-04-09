@@ -2,8 +2,8 @@
 
 fv mini program
 
-#部署
-*体验版发布：
+# 部署
+* 体验版发布：
 ```js
 // miniprogram/config.js
 
@@ -15,7 +15,7 @@ const envEnum = {
 const env = envEnum.DEV // 将env设置成envEnum.DEV
 //...
 ```
-*正式版发布：
+* 正式版发布：
 ```js
 // miniprogram/config.js
 
@@ -28,7 +28,8 @@ const env = envEnum.PROD // 将env设置成envEnum.PROD
 //...
 ```
 
-#目录结构
+# 目录结构
+```js
 |-miniprogram
   |-common // 公共文件
   |-components // 组件
@@ -86,3 +87,4 @@ const env = envEnum.PROD // 将env设置成envEnum.PROD
   |  |-my // 我的
   |  |-room // 视频展示
   |-stores // 状态管理
+  ```
