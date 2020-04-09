@@ -5,7 +5,10 @@
     "pages/filter/filter",
     "pages/favorite/favorite",
     "pages/more/more",
-    "pages/room/room"
+    "pages/room/room",
+    "pages/cooperation/cooperation",
+    "pages/about/about",
+    "pages/error/error"
   ],
   "usingComponents": {
     "e-search": "/components/easyUI/form/search/search",
@@ -18,7 +21,8 @@
     "e-base-button": "/components/easyUI/button/base_button/base_button",
     "e-modal": "/components/easyUI/senior/modal/modal",
     "a-popup": "/components/authorize_popup/authorize_popup",
-    "e-load-more": "/components/easyUI/base/load_more/load_more"
+    "e-load-more": "/components/easyUI/base/load_more/load_more",
+    "network-debug": "/components/network_debug/network-debug"
   },
   "window": {
     "backgroundColor": "#161825",

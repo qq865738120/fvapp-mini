@@ -1,0 +1,10 @@
+<!--miniprogram/pages/error/error.wxml-->
+<view class="error-page">
+  <view class="title">Network调试log</view>
+  <view class="item" style="color: item.responseData.code === 1 ? 'red' : 'white'" wx:for="{{networkLog}}">
+    <view class="api">{{item.url}}</view>
+    <view class="date">{{item.date}}</view>
+    <view class="request">{{ item.requestDataStr }}</view>
+    <view class="request">{{ item.responseDataStr }}</view>
+  </view>
+</view>

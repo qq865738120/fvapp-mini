@@ -1,12 +1,12 @@
 <!--miniprogram/pages/room/room.wxml-->
 <!-- 在模版上放置标签 -->
-<view class="page-room {{ currentActivity.videoBgTop === -1 && 'flex-center' }}" style="background: url({{ currentVideo.type !== 1 && currentActivity.videoBgImgSrc }});">
+<view class="page-room {{ currentActivity.videoBgTop === -1 && 'flex-center' }}" style="background-image: url({{ currentVideo.type !== 1 && apiError[RequestUrls.video_info].errorCode !== PremitionError.NO_ACTIVE_PREMITION_1 && apiError.errorCode !== PremitionError.NO_ACTIVE_PREMITION_2 && currentActivity.videoBgImgSrc }});">
 
-  <trtc-room wx:if="{{currentVideo.type === 1}}" id="trtcroom" config="{{trtcConfig}}" catchpinch="onPinch" catchswipe="onSwipe" catchontap="onTap" catchmove="onMove" catchondoubletap="onDoubleTap"></trtc-room>
+  <trtc-room wx:if="{{currentVideo.type === 1 && apiError[RequestUrls.video_info].errorCode !== PremitionError.NO_ACTIVE_PREMITION_1 && apiError.errorCode !== PremitionError.NO_ACTIVE_PREMITION_2}}" id="trtcroom" config="{{trtcConfig}}" catchpinch="onPinch" catchswipe="onSwipe" catchontap="onTap" catchmove="onMove" catchondoubletap="onDoubleTap"></trtc-room>
 
   <!-- <image wx:if="{{currentVideo.type === 1 && isStop}}" class="play-icon" src="/images/icon_bofangliang.png"></image> -->
 
-  <video id="video" wx:if="{{currentVideo.type === 2}}" loop="{{ true }}" class="player" style="margin-top: {{ currentActivity.videoBgTop !== -1 && currentActivity.videoBgTop}}%; height: {{ 750 / currentActivity.videoWidthPixel * currentActivity.videoHeightPixel }}rpx" autoplay="{{true}}" controls="{{true}}" src="{{ currentVideo.pullStreamUrl }}"></video>
+  <video id="video" wx:if="{{currentVideo.type === 2 && apiError[RequestUrls.video_info].errorCode !== PremitionError.NO_ACTIVE_PREMITION_1 && apiError.errorCode !== PremitionError.NO_ACTIVE_PREMITION_2 }}" loop="{{ true }}" class="player" style="margin-top: {{ cu.videoBgTop !== -1 && currentActivity.videoBgTop}}vh; height: {{ 750 / currentVideo.videoWidthPixel * currentVideo.videoHeightPixel }}rpx" autoplay="{{true}}" controls="{{true}}" src="{{ currentVideo.pullStreamUrl }}"></video>
 
   <view class="bottom-bar" wx:if="{{isShowBar}}">
     <view class="bottom-bar-title">{{currentVideo.name}}</view>
@@ -24,7 +24,7 @@
   </view>
 
   <view wx:if="{{currentVideo.type === 2}}" class="back-button" style="top: {{ statusBarHeight }}">
-    <e-icon name="return" color='#fff' size='56rpx' catchicontap="onBackTap" />
+    <e-icon name="return" color='#fff' size='48rpx' padding="6rpx" catchicontap="onBackTap" />
   </view>
 
   <view class="share-warp" wx:if="{{ isShowShare }}" catchtap="onShareWarpTap">
@@ -59,12 +59,15 @@
   <!-- <view class="painter">
     <painter palette="{{imgData}}" bindimgOK="onImgOK" bindimgErr="onImgErr" />
   </view> -->
-  
+
+  <view class="custom-toast-component" wx:if="{{ isShowToast }}">
+    <view class="custom-toast-component-content {{ tempOrientation === 'horizontal' && 'custom-toast-component-content-horizontal' }}">{{ isStop ? '已暂停' : '已播放' }}</view>
+  </view>
 
   <block wx:if="{{ isAuthorization  }}">
     <e-modal
-      isShow='{{ apiError.errorCode === PremitionError.NO_ACTIVE_PREMITION_1 || apiError.errorCode === PremitionError.NO_ACTIVE_PREMITION_2 }}'>
-      <text slot='content' style='color: #666; font-size: 30rpx'>{{ apiError.errorDesc }}</text>
+      isShow='{{ apiError[RequestUrls.video_info].errorCode === PremitionError.NO_ACTIVE_PREMITION_1 || apiError[RequestUrls.video_info].errorCode === PremitionError.NO_ACTIVE_PREMITION_2 }}'>
+      <text slot='content' style='color: #666; font-size: 30rpx'>{{ apiError[RequestUrls.video_info].errorDesc }}</text>
       <e-base-button
         id='ok'
         slot='bottom'
@@ -81,3 +84,5 @@
   </block>
   <a-popup isShow="{{ isInit && !isAuthorization }}"></a-popup>
 </view>
+
+<network-debug />

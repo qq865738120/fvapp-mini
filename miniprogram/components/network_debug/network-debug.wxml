@@ -1,0 +1,3 @@
+<!--components/network_debug/network-debug.wxml-->
+<text wx:if="{{ env === 'DEV_ENV' }}" class="network-log-component" catchtap="onTap">network log</text>
+

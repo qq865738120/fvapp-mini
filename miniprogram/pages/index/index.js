@@ -21,7 +21,8 @@ const connect = mapToData((state) => ({
   isInit: state.common.isInit,
   userInfo: state.common.userInfo,
   isAuthorization: state.common.isAuthorization,
-  activityListRes: state.common.activityListRes
+  activityListRes: state.common.activityListRes,
+  activityType: state.common.activityType,
 }))
 
 Page(connect({
@@ -44,8 +45,15 @@ Page(connect({
   onShow() {
     currentPage = 1;
     this.setData({
-      topBarSelected: 1
-    })
+      topBarSelected: 1,
+      orderType: ["desc", "desc"]
+    });
+    commonStore.refechActivityList({
+      orderField: "update_time",
+      condition: searchVal,
+      orderType: "desc",
+      ...this.data.activityType
+    });
   },
 
   async onSearch(e) {
@@ -85,7 +93,8 @@ Page(connect({
         commonStore.refechActivityList({
           orderField: "degree",
           condition: searchVal,
-          orderType: this.data.topBarSelected === e.currentTarget.dataset.index ? firstOrderType : this.data.orderType[0]
+          orderType: this.data.topBarSelected === e.currentTarget.dataset.index ? firstOrderType : this.data.orderType[0],
+          ...this.data.activityType
         });
         orderField = "degree";
         currentPage = 1;
@@ -94,7 +103,8 @@ Page(connect({
         commonStore.refechActivityList({
           orderField: "update_time",
           condition: searchVal,
-          orderType: this.data.topBarSelected === e.currentTarget.dataset.index ? secondOrderType : this.data.orderType[1]
+          orderType: this.data.topBarSelected === e.currentTarget.dataset.index ? secondOrderType : this.data.orderType[1],
+          ...this.data.activityType
         });
         orderField = "update_time";
         currentPage = 1;
@@ -119,9 +129,10 @@ Page(connect({
     })
   },
 
-  onMoreTap() {
+  onGoVideo(e) {
+    commonStore.changeCurrentVideo({ id: e.currentTarget.dataset.activity.defaultVideoId })
     wx.navigateTo({
-      url: "/pages/more/more",
+      url: "/pages/room/room",
     })
   },
 
@@ -140,6 +151,14 @@ Page(connect({
         isLoading: false
       });
     }
-  }
+  },
+
+  onShareAppMessage() {
+    return {
+      title: getIn(this.data.activityListRes, ["0", "name"], ""),
+      path: `/pages/index/index`,
+      imageUrl: getIn(this.data.activityListRes, ["0", "videoBgImgSrc"], "")
+    }
+  },
 
 }))

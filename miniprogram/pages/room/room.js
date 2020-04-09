@@ -13,8 +13,10 @@ import {
 } from '../../common/tools.js';
 import commonStore from '../../stores/common.js';
 import {
-  PremitionError
+  PremitionError,
+  RequestUrls
 } from '../../common/enum.js';
+import config from "../../config.js";
 
 const connect = mapToData((state) => ({
   isInit: state.common.isInit,
@@ -31,12 +33,12 @@ const connect = mapToData((state) => ({
 const sysInfo = wx.getSystemInfoSync();
 
 let videoId = "";
-let shareImagePath = null;
 let socketOpen = false
 let socketMsgQueue = []
 let socketTask;
 let timer1;
 let timer2;
+let timer3 = null;
 
 let videoDetail; // 远端视频推送信息
 let orientation = "vertical"; // 手机方向
@@ -72,7 +74,7 @@ const getVideoInfo = (h, w) => {
   const aspectRatio = orientation === ORIENTATION_TYPE.VERTICAL ? videoWidth / videoHeight : videoHeight / videoWidth; // 视频横宽比
   let clientVideoWidth = orientation === ORIENTATION_TYPE.VERTICAL ? sysInfo.screenWidth : sysInfo.screenWidth / aspectRatio; // 视频在客户端中相对宽度
   let clientVideoHeight = orientation === ORIENTATION_TYPE.VERTICAL ? sysInfo.screenWidth / aspectRatio : sysInfo.screenWidth; // 视频在客户端中相对高度
-  let videoTop =  orientation === ORIENTATION_TYPE.VERTICAL ? (sysInfo.screenHeight - clientVideoHeight) / 2 : 0; // 视频在客户端中顶部与屏幕顶部距离
+  let videoTop = orientation === ORIENTATION_TYPE.VERTICAL ? (sysInfo.screenHeight - clientVideoHeight) / 2 : 0; // 视频在客户端中顶部与屏幕顶部距离
   let videoLeft = orientation === ORIENTATION_TYPE.VERTICAL ? 0 : (sysInfo.screenHeight - clientVideoWidth) / 2; // 视频在客户端中最左边距离屏幕左边距离
 
   return {
@@ -113,8 +115,11 @@ Page(connect({
     isShowShare: false,
     imgData: null,
     isStop: false,
-    statusBarHeight: px2Rpx(sysInfo.statusBarHeight) + "rpx",
-    PremitionError: PremitionError
+    statusBarHeight: px2Rpx(sysInfo.statusBarHeight) + 16 + "rpx",
+    PremitionError: PremitionError,
+    RequestUrls,
+    isShowToast: false,
+    tempOrientation: 'vertical'
   },
 
   onModalButtonTap(e) {
@@ -127,21 +132,15 @@ Page(connect({
    * 缩放手势
    */
   onPinch(e) {
-    // const now = Date.now();
-    // if (now - lastTime < 200) return;
-    // lastTime = now;
-
-    if (this.data.isStop) {
-      return;
-    }
     const {
       scale,
       touches
     } = e.detail;
     console.log("捏", scale);
-    const myStep = scale > 1 ? scale - 1 : scale;
+    if (scale === 1) return;
+    const myStep = scale >= 1 ? scale - 1 : scale;
     step += (myStep < 0 ? 0 : myStep);
-    if (step < 1) return;
+    if (step <= 1) return;
     step = 0;
 
     const {
@@ -208,7 +207,7 @@ Page(connect({
     const y = parseInt(videoY);
 
     const msg = {
-      type: scale > 1 ? EVENT_TYPE.ZOOM : EVENT_TYPE.REDUCE,
+      type: scale >= 1 ? EVENT_TYPE.ZOOM : EVENT_TYPE.REDUCE,
       percent: 1,
       roomID: getIn(this.data.currentVideo, ["roomID"]),
       x,
@@ -226,6 +225,7 @@ Page(connect({
 
   onTap(e) {
     console.log("点击", e);
+    if (orientation === ORIENTATION_TYPE.HORIZONTAL) return;
     this.setData({
       isShowBar: !this.data.isShowBar
     })
@@ -235,6 +235,13 @@ Page(connect({
     this.setData({
       isStop: !this.data.isStop
     })
+
+    if (!isNull(timer3)) {
+      clearTimeout(timer3);
+      timer3 = null;
+    }
+
+    this.setData({ tempOrientation: orientation })
 
     console.log("双击", this.data.isStop);
     const msg = {
@@ -248,6 +255,15 @@ Page(connect({
     };
     console.log("wss message", JSON.stringify(msg))
     this.sendSocketMessage(JSON.stringify(msg))
+    this.setData({
+      isShowToast: true
+    })
+    timer3 = setTimeout(() => {
+      this.setData({
+        isShowToast: false
+      })
+      timer3 = null;
+    }, 1500)
   },
 
   /**
@@ -255,10 +271,6 @@ Page(connect({
    * @param {} e 
    */
   onMove(e) {
-    if (this.data.isStop) {
-      return;
-    }
-
     const {
       deltaX,
       deltaY
@@ -322,18 +334,24 @@ Page(connect({
     wx.showLoading({
       title: '加载中...',
     })
-    const { posterUrl } = await commonStore.refectGetSharePoster({ videoId: getIn(this.data, ["currentVideo", "id"], 0) });
+    const {
+      posterUrl
+    } = await commonStore.refectGetSharePoster({
+      videoId: getIn(this.data, ["currentVideo", "id"], 0)
+    });
     console.log("posterUrl", posterUrl)
     wx.hideLoading();
     if (!isNull(posterUrl)) {
       wx.getImageInfo({
         src: posterUrl,
         success: res => {
-          const { path } = res;
+          const {
+            path
+          } = res;
           console.log("临时图片路径", path);
           wx.getSetting({
             success: setting => {
-              console.log(setting)
+              console.log("setting", setting)
               if (setting.authSetting['scope.writePhotosAlbum']) {
                 // 已经授权 this.isAuthorization = true;
                 wx.saveImageToPhotosAlbum({
@@ -370,24 +388,22 @@ Page(connect({
               })
             }
           });
+        },
+        fail: () => {
+          console.log("海报未生成", "获取图片信息失败")
+          wx.showToast({
+            title: '生成海报失败',
+            icon: 'none'
+          })
         }
       })
     } else {
-      console.log("海报未生成")
+      console.log("海报未生成", "接口未返回图片链接")
       wx.showToast({
         title: '生成海报失败',
         icon: 'none'
       })
     }
-  },
-
-  onImgOK(e) {
-    console.log("imageOk", e);
-    shareImagePath = e.detail.path;
-  },
-
-  onImgErr(e) {
-    console.log("imageErr", e);
   },
 
   async onFavoriteTap(e) {
@@ -530,7 +546,6 @@ Page(connect({
       console.log("videoId", videoId)
     }
 
-
     /**
      * 监听手机方向改变
      */
@@ -587,17 +602,21 @@ Page(connect({
           // 设置视频方向
           orientation = "horizontal";
           if (this.data.currentVideo.type === 2) { // 子弹时间
-            videoContext.requestFullScreen({ direction: 90 })
+            videoContext.requestFullScreen({
+              direction: 90
+            })
           } else if (this.data.currentVideo.type === 1) { // 自由视点
             this.trtcComponent && this.trtcComponent.setViewOrientation({
               userID: videoDetail.userID,
               streamType: videoDetail.streamType,
               orientation: 'horizontal' // 竖向：vertical，横向：horizontal
             })
-            this.setData({ isShowBar: false })
+            this.setData({
+              isShowBar: false
+            })
           }
         } else {
-          console.log('change:竖屏');
+          console.log('change:竖屏', this.data.currentVideo.type);
           // 设置视频方向
           orientation = "vertical";
           if (this.data.currentVideo.type === 2) { // 子弹时间
@@ -608,7 +627,9 @@ Page(connect({
               streamType: videoDetail.streamType,
               orientation: 'vertical' // 竖向：vertical，横向：horizontal
             })
-            this.setData({ isShowBar: true })
+            this.setData({
+              isShowBar: true
+            })
           }
         }
       }
@@ -660,7 +681,7 @@ Page(connect({
                */
               console.log("----------wss开始连接----------")
               socketTask = wx.connectSocket({
-                url: 'wss://fvcv0.iotnc.cn:8081',
+                url: config.wssHost,
                 success: (res) => {
                   console.log("---------wss连接成功---------", res)
                 },
@@ -799,5 +820,10 @@ Page(connect({
       clearInterval(timer2);
       timer2 = undefined;
     }
+    if (this.trtcComponent) {
+      this.trtcComponent = null;
+    }
+    wx.stopAccelerometer()
+    wx.offAccelerometerChange()
   },
 }))

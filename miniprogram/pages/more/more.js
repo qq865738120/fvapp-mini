@@ -11,7 +11,8 @@ import {
   getIn
 } from '../../common/tools.js';
 import {
-  PremitionError
+  PremitionError,
+  RequestUrls
 } from '../../common/enum.js';
 
 const app = getApp()
@@ -40,7 +41,8 @@ Page(connect({
   data: {
     isLoading: false,
     listHeight: px2Rpx(sysInfo.windowHeight) - 5 + "rpx",
-    PremitionError: PremitionError
+    PremitionError: PremitionError,
+    RequestUrls
   },
 
   onVideoTap(e) {
@@ -122,6 +124,10 @@ Page(connect({
 
   onShow() {
     
+  },
+
+  onUnload () {
+    searchVal = ""
   },
 
   onShareAppMessage() {

@@ -5,6 +5,9 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
+  background-repeat:no-repeat;
+  background-position: center center;
+  background-size: cover;
 }
 
 .flex-center {
@@ -196,4 +199,27 @@ button::after {
 .painter {
   position: absolute;
   top: -2000rpx;
+}
+
+.custom-toast-component {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-toast-component-content {
+  padding: 25rpx 45rpx;
+  background-color: rgba(22, 21, 21, 0.603);
+  border-radius: 15rpx;
+  color: white;
+  font-size: 28rpx;
+}
+
+.custom-toast-component-content-horizontal {
+  transform: rotate(90deg);
 }

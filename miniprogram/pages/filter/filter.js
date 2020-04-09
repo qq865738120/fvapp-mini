@@ -31,13 +31,14 @@ Page(connect({
       { id: "99", text: "其他" }
     ],
     typeList: [
+      { id: "-1", text: "全部" },
       { id: "0", text: "共有" },
       { id: "1", text: "私有" }
     ]
   },
 
   async onSaveTap() {
-    await commonStore.refechActivityList(this.data.activityType);
+    // await commonStore.refechActivityList(this.data.activityType);
     wx.switchTab({
       url: '/pages/index/index',
     })

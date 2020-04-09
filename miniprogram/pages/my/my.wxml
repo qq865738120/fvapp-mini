@@ -14,14 +14,14 @@
       </view>
       <e-icon name="forward" size='30rpx' color='#AFAFAF'  />
     </view>
-    <view class="list-item">
+    <view class="list-item" catchtap="onCooperationTap">
       <view class="list-item-left">
         <image class="list-item-left-icon" src="/images/icon_cooperation.png"></image>
         <text class="list-item-left-text">商务合作</text>
       </view>
       <e-icon name="forward" size='30rpx' color='#AFAFAF'  />
     </view>
-    <view class="list-item">
+    <view class="list-item" catchtap="onAboutTap">
       <view class="list-item-left">
         <image class="list-item-left-icon" src="/images/icon_about.png"></image>
         <text class="list-item-left-text">关于我们</text>

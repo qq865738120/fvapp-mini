@@ -66,7 +66,7 @@ Component({
     libVersion: ENV.LIB_VERSION,
 
     isShowBar: true,
-    statusBarHeight: px2Rpx(sysInfo.statusBarHeight) + "rpx"
+    statusBarHeight: px2Rpx(sysInfo.statusBarHeight) + 16 + "rpx"
   },
   /**
    * 生命周期方法

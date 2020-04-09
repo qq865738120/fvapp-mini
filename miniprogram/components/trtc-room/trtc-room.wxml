@@ -30,7 +30,7 @@
     <e-loading wx:if="{{streamList.length === 0}}" type='doubleBounce' width='50' height='50' color='#FE2C54' cus="loading-class" />
 
     <view class="back-button" style="top: {{ statusBarHeight }}">
-      <e-icon name="return" color='#fff' size='56rpx' catchicontap="_hangUp" />
+      <e-icon name="return" color='#fff' size='48rpx' catchicontap="_hangUp" padding="6rpx" />
     </view>
     
 

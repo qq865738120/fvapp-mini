@@ -67,8 +67,8 @@
 
 <block wx:if="{{ isAuthorization  }}">
   <e-modal
-    isShow='{{ apiError.errorCode === PremitionError.NO_ACTIVE_PREMITION_1 || apiError.errorCode === PremitionError.NO_ACTIVE_PREMITION_2 }}'>
-    <text slot='content' style='color: #666; font-size: 30rpx'>{{ apiError.errorDesc }}</text>
+    isShow='{{ apiError[RequestUrls.video_list].errorCode === PremitionError.NO_ACTIVE_PREMITION_1 || apiError[RequestUrls.video_list].errorCode === PremitionError.NO_ACTIVE_PREMITION_2 }}'>
+    <text slot='content' style='color: #666; font-size: 30rpx'>{{ apiError[RequestUrls.video_list].errorDesc }}</text>
     <e-base-button
       id='ok'
       slot='bottom'
@@ -84,3 +84,5 @@
   </e-modal>
 </block>
 <a-popup isShow="{{ isInit && !isAuthorization }}"></a-popup>
+
+<network-debug />

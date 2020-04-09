@@ -1,0 +1,2 @@
+<!--miniprogram/pages/cooperation/cooperation.wxml-->
+<web-view src="https://www.iotnc.cn/contactUs" bindload="onWebLoad"></web-view>

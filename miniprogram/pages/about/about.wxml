@@ -1,0 +1,2 @@
+<!--miniprogram/pages/about/about.wxml-->
+<web-view src="https://www.iotnc.cn/aboutUs" bindload="onWebLoad"></web-view>

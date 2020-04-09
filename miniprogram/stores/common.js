@@ -6,6 +6,9 @@ import {
   getIn,
   isEmptyObj
 } from "../common/tools.js";
+import {
+  RequestUrls
+} from "../common/enum"
 
 /**
  * 全局状态管理
@@ -29,7 +32,7 @@ class CommonStore {
     this.activityListRes = {}; // activity列表
     this.activityType = {
       type: -1,
-      permissionType: 0
+      permissionType: -1
     }; // activity筛选类型
     this.currentActivity = {}; // 当前活动
     this.currentVideo = {}; // 当前视频
@@ -39,7 +42,12 @@ class CommonStore {
     this.enterType = (scene === 1011 || scene === 1012 || scene === 1013 || scene === 1007) ? 1 : 0; // 进入类型：0-非扫码，1-扫码
     this.enterPath = path // 扫码进入的页面
     this.pageSize = 20; // 页面大小
-    this.apiError = { errorCode: null, errorDesc: null } // 接口错误信息
+    this.apiError = {} // 接口错误信息
+    Object.keys(RequestUrls).forEach(key => this.apiError[RequestUrls[key]] = {
+      errorCode: null,
+      errorDesc: null
+    }) // 接口错误信息初始化
+    this.networkLog = [] // 接口请求log
 
     wx.getSetting({
       success: (setting) => {
@@ -49,7 +57,7 @@ class CommonStore {
           this.isAuthorization = false;
         }
       },
-      complete: async() => {
+      complete: async () => {
         await Promise.all([this.refechUserInfo(), this.refectUsersig()])
         this.refechActivityList({
           orderField: this.orderField
@@ -58,12 +66,18 @@ class CommonStore {
     });
   }
 
+  changeNetworkLog(log) {
+    this.networkLog.push(log)
+  }
 
   changeApiError(apiError) {
-    this.apiError = {...apiError};
+    Object.keys(apiError).forEach(key => this.apiError[key] = {
+      ...apiError[key]
+    })
   }
 
   async warpData(dataKey, refech, refechParams, isNotShowLoading) {
+    if (!refech) return
     if (isNotShowLoading) {
       const res = await refech(refechParams);
       this[dataKey] = {
@@ -91,17 +105,20 @@ class CommonStore {
   }
 
   changeCurrentVideo(currentVideo) {
-    this.currentVideo = { ...currentVideo
+    this.currentVideo = {
+      ...currentVideo
     };
   }
 
   changeCurrentActivity(currentActivity) {
-    this.currentActivity = { ...currentActivity
+    this.currentActivity = {
+      ...currentActivity
     }
   }
 
   changeActivityType(activityType) {
-    this.activityType = { ...activityType
+    this.activityType = {
+      ...activityType
     };
   }
 
@@ -114,7 +131,8 @@ class CommonStore {
   }
 
   changeUserInfo(userInfo) {
-    this.userInfo = { ...userInfo
+    this.userInfo = {
+      ...userInfo
     }
   }
 
@@ -166,7 +184,8 @@ class CommonStore {
   }
 
   changeActivityList(activityList) {
-    this.activityListRes = { ...activityList
+    this.activityListRes = {
+      ...activityList
     }
   }
 
@@ -175,8 +194,9 @@ class CommonStore {
    */
   async refechActivityList(params, isNotShowLoading) {
     const current = getIn(params, ["current"], 1);
+    if (!getIn(this.request, ['getActivityList'])) return
     if (current === 1) {
-      await this.warpData("activityListRes", this.request.getActivityList, params);
+      await this.warpData("activityListRes", getIn(this.request, ['getActivityList']), params);
     } else if (!isEmptyObj(this.activityListRes)) {
       const res = await this.request.getActivityList(params);
       this.activityListRes.records.push.apply((this.activityListRes.records || []), res.records);
@@ -244,8 +264,13 @@ class CommonStore {
   async refechVideoInfo(params) {
     const res = await this.request.getVideoInfo(params);
     console.log("res", res)
-    this.changeCurrentActivity(res.activity);
-    this.changeCurrentVideo(res.video);
+    if (res) {
+      this.changeCurrentActivity(res.activity);
+      this.changeCurrentVideo(res.video);
+    } else {
+      this.changeCurrentActivity({});
+      this.changeCurrentVideo({});
+    }
   }
 
   async refechDoVideoOpen(params) {

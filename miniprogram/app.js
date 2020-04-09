@@ -7,28 +7,58 @@ import {
 } from '/common/enum.js';
 import axios from 'axios'
 import mpAdapter from 'axios-miniprogram-adapter'
+import {
+  RequestUrls
+} from './common/enum'
 import config from "./config"
 axios.defaults.adapter = mpAdapter
 
 let $axios = axios.create({
   baseURL: config.host,
   timeout: 10000,
-  headers: { 
+  headers: {
     "Content-Type": "application/json",
     "APPID": "wx7f2178d6fb62eef4"
   }
 });
 
 App({
-  async onLaunch (options) {
+  async onLaunch(options) {
     this.$axios = $axios;
     this.wxPro = wxPro;
     this.globalData = {}
 
+    $axios.interceptors.request.use(function (config) {
+      // 在发送请求之前做些什么
+      commonStore.changeApiError({
+        [config.url]: {
+          errorCode: null,
+          errorDesc: null
+        }
+      })
+      return config;
+    }, function (error) {
+      // 对请求错误做些什么
+      return Promise.reject(error);
+    });
+
     $axios.interceptors.response.use(function (response) {
       // 对响应数据做点什么
+      const date = new Date();
+      commonStore.changeNetworkLog({
+        url: response.request.url,
+        requestDataStr: JSON.stringify(response.request.data),
+        responseDataStr: JSON.stringify(response.data),
+        responseData: response.data,
+        date: `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} ${date.getMilliseconds()}`
+      })
       if (response.data.code === 1) {
-        commonStore.changeApiError({ errorCode: response.data.errorCode, errorDesc: response.data.errorDesc })
+        commonStore.changeApiError({
+          [response.config.url]: {
+            errorCode: response.data.errorCode,
+            errorDesc: response.data.errorDesc
+          }
+        })
         if (!(response.data.errorCode === PremitionError.NO_ACTIVE_PREMITION_1 || response.data.errorCode === PremitionError.NO_ACTIVE_PREMITION_2)) {
           wx.showToast({
             title: '服务君出错啦！',
@@ -37,6 +67,7 @@ App({
           })
         }
       }
+      console.log("response", response)
       return response.data.data;
     }, function (error) {
       // 对响应错误做点什么
@@ -47,7 +78,7 @@ App({
       })
       return Promise.reject(error);
     });
-    
+
     wx.cloud.init({
       // env 参数说明：
       //   env 参数决定接下来小程序发起的云开发调用（wx.cloud.xxx）会默认请求到哪个云环境的资源
@@ -58,7 +89,9 @@ App({
     })
 
     wx.showNavigationBarLoading()
-    const res =  await wx.cloud.callFunction({name: 'userInfo'})
+    const res = await wx.cloud.callFunction({
+      name: 'userInfo'
+    })
     $axios.interceptors.request.use(function (config) {
       // 在发送请求之前做些什么
       config.data = {

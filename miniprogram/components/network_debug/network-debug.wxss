@@ -1,0 +1,8 @@
+/* components/network_debug/network-debug.wxss */
+.network-log-component {
+  position: fixed;
+  bottom: 10rpx;
+  left: 10rpx;
+  font-size: 10rpx;
+  z-index: 99999999;
+}

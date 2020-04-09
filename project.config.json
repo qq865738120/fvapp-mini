@@ -99,6 +99,12 @@
 					"pathName": "pages/room/room",
 					"query": "scene=2",
 					"scene": 1011
+				},
+				{
+					"id": -1,
+					"name": "pages/error/error",
+					"pathName": "pages/error/error",
+					"scene": null
 				}
 			]
 		}

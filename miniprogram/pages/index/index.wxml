@@ -41,8 +41,8 @@
       <e-loading type='doubleBounce' width='50' height='50' color='#666'/>
     </view>
     
-    <view class="list-item" wx:if="{{!activityListRes.isLoading}}" wx:for="{{ activityListRes.records }}" wx:key="activityId" data-activity="{{ item }}" catchtap="onGoMore">
-      <image class="list-item-img" lazy-load="{{true}}" src="{{ item.defaultVideoFirstFrameImgSrc }}"></image>
+    <view class="list-item" wx:if="{{!activityListRes.isLoading}}" wx:for="{{ activityListRes.records }}" wx:key="activityId">
+      <image class="list-item-img" lazy-load="{{true}}" src="{{ item.defaultVideoFirstFrameImgSrc }}" data-activity="{{ item }}" catchtap="onGoVideo"></image>
       <text class="list-item-tit">{{ item.name }}</text>
       <e-enhance-view type='betweenCenter' margin='30rpx 0 0'>
         <view class="list-item-left">
@@ -60,7 +60,7 @@
             text='{{ item.totalStarCount }}'
             textColor='#5E5E5E' />
         </view>
-        <view class="list-item-right" catchtap="onMoreTap">
+        <view class="list-item-right" data-activity="{{ item }}" catchtap="onGoMore">
           更多视频
           <image class="list-item-icon" src="/images/icon_more.png"></image>
         </view>
@@ -81,3 +81,5 @@
     <e-loading type='threeBounce' color='#FE2C54'/>
   </view>
 </e-transition>
+
+<network-debug />
