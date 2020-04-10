@@ -102,8 +102,8 @@ Page(connect({
       template: '1v1', // 画面排版模式
       scene: "rtc",
       audioVolumeType: "media",
-      enableCamera: true,
-      enableMic: false,
+      enableCamera: false,
+      enableMic: true,
       enableAns: true,
       enableAgc: true,
       enableIM: false,
@@ -730,7 +730,7 @@ Page(connect({
     this.trtcComponent.on(TRTC_EVENT.LOCAL_JOIN, (event) => {
       console.log('******* 加入房间', this.trtcComponent.getRemoteUserList())
       // this.trtcComponent.publishLocalVideo()
-      // this.trtcComponent.publishLocalAudio()
+      this.trtcComponent.publishLocalAudio()
     })
     this.trtcComponent.on(TRTC_EVENT.LOCAL_LEAVE, (event) => {
       console.log('* room LOCAL_LEAVE', event)
