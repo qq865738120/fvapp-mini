@@ -107,7 +107,8 @@ Page(connect({
       enableAns: true,
       enableAgc: true,
       enableIM: false,
-      debugMode: true
+      debugMode: true,
+      enableBackgroundMute: true
     },
     isShowBar: true,
     downloadText: "保存",
@@ -241,7 +242,9 @@ Page(connect({
       timer3 = null;
     }
 
-    this.setData({ tempOrientation: orientation })
+    this.setData({
+      tempOrientation: orientation
+    })
 
     console.log("双击", this.data.isStop);
     const msg = {
@@ -723,6 +726,20 @@ Page(connect({
     // }, 500)
   },
 
+  onShow() {
+    videoDetail && this.trtcComponent.subscribeRemoteAudio({
+      userID: videoDetail.userID,
+      streamType: videoDetail.streamType,
+    })
+  },
+
+  onHide() {
+    videoDetail && this.trtcComponent.unsubscribeRemoteAudio({
+      userID: videoDetail.userID,
+      streamType: videoDetail.streamType,
+    })
+  },
+
   bindTRTCRoomEvent() {
     const TRTC_EVENT = this.trtcComponent.EVENT
     this.timestamp = []
@@ -799,7 +816,7 @@ Page(connect({
 
   onShareAppMessage() {
     return {
-      title: getIn(this.data.currentVideo, ["shareTitle"], "-"),
+      title: getIn(this.data.currentVideo, ["name"], "-"),
       path: `/pages/room/room?scene=${getIn(this.data.currentVideo, ["id"], 0)}`,
       imageUrl: getIn(this.data.currentVideo, ["firstFrameImgSrc"], "")
     }
