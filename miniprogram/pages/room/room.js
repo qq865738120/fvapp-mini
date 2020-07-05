@@ -39,6 +39,7 @@ let socketTask;
 let timer1;
 let timer2;
 let timer3 = null;
+let timer4;
 
 let videoDetail; // 远端视频推送信息
 let orientation = "vertical"; // 手机方向
@@ -96,7 +97,7 @@ Page(connect({
    */
   data: {
     trtcConfig: {
-      sdkAppID: '1400323883', // 开通实时音视频服务创建应用后分配的 SDKAppID
+      sdkAppID: '1400342258', // 开通实时音视频服务创建应用后分配的 SDKAppID
       userID: "", // 用户 ID，可以由您的帐号系统指定
       userSig: "", // 身份签名，相当于登录密码的作用
       template: '1v1', // 画面排版模式
@@ -107,7 +108,7 @@ Page(connect({
       enableAns: true,
       enableAgc: true,
       enableIM: false,
-      debugMode: true,
+      debugMode: config.env === config.envEnum.DEV ? true : false,
       enableBackgroundMute: true
     },
     isShowBar: true,
@@ -529,7 +530,6 @@ Page(connect({
    * 发送手势数据
    */
   sendSocketMessage(msg) {
-    console.log("socketOpen:", socketOpen, " socketMsgQueue:", socketMsgQueue)
     if (socketOpen) {
       wx.sendSocketMessage({
         data: msg
@@ -674,7 +674,8 @@ Page(connect({
               this.trtcComponent = this.selectComponent('#trtcroom');
               this.bindTRTCRoomEvent();
               this.trtcComponent.enterRoom({
-                roomID: parseInt(getIn(this.data.currentVideo, ["roomID"]))
+                // roomID: parseInt(getIn(this.data.currentVideo, ["roomID"]))
+                roomID: 918
               }).catch((res) => {
                 console.error('room joinRoom 进房失败:', res)
               });
@@ -687,6 +688,9 @@ Page(connect({
                 url: config.wssHost,
                 success: (res) => {
                   console.log("---------wss连接成功---------", res)
+                  const timer4 = setInterval(() => {
+                    this.sendSocketMessage(JSON.stringify({ type: 100 }))
+                  }, 5000)
                 },
                 fail: (res) => {
                   console.log("---------wss连接失败---------", res)
@@ -836,6 +840,10 @@ Page(connect({
     if (timer2) {
       clearInterval(timer2);
       timer2 = undefined;
+    }
+    if (timer4) {
+      clearInterval(timer4);
+      timer4 = undefined;
     }
     if (this.trtcComponent) {
       this.trtcComponent = null;

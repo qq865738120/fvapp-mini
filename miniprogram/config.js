@@ -13,5 +13,6 @@ const wssHost = env === envEnum.DEV ? "wss://fvcv-rd.iotnc.cn:9081" : "wss://fvc
 export default {
   env,
   host,
-  wssHost
+  wssHost,
+  envEnum
 }

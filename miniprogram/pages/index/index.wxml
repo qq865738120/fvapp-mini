@@ -72,7 +72,7 @@
     </view>
   </scroll-view>
 
-  <a-popup isShow="{{ isInit && !isAuthorization }}"></a-popup>
+  <!-- <a-popup isShow="{{ isInit && !isAuthorization }}"></a-popup> -->
 </view>
 </e-transition>
 
