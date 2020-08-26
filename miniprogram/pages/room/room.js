@@ -28,6 +28,7 @@ const connect = mapToData((state) => ({
   currentActivity: state.common.currentActivity,
   apiError: state.common.apiError,
   isAuthorization: state.common.isAuthorization,
+  isCloseAuthorizationModal: state.common.isCloseAuthorizationModal
 }))
 
 const sysInfo = wx.getSystemInfoSync();
@@ -102,12 +103,12 @@ Page(connect({
       userSig: "", // 身份签名，相当于登录密码的作用
       template: '1v1', // 画面排版模式
       scene: "rtc",
-      audioVolumeType: "media",
+      audioVolumeType: "voicecall",
       enableCamera: false,
       enableMic: true,
-      enableAns: true,
-      enableAgc: true,
-      enableIM: false,
+      enableAns: false,
+      enableAgc: false,
+      enableIM: true,
       debugMode: config.env === config.envEnum.DEV ? true : false,
       enableBackgroundMute: true
     },
@@ -309,6 +310,13 @@ Page(connect({
   },
 
   onShareTap(e) {
+    if (!this.data.isAuthorization) {
+      commonStore.changeisCloseAuthorizationModal(true)
+      setTimeout(() => {
+        commonStore.changeisCloseAuthorizationModal(false)
+      }, 100)
+      return
+    }
     commonStore.refechDoVideoOpen({
       videoId: videoId ? videoId : getIn(this.data.currentVideo, ["id"], 0),
       opType: OP_TYPE.SHARE
@@ -319,7 +327,6 @@ Page(connect({
   },
 
   onShareWarpTap(e) {
-    console.log("eeee", 111111)
     this.setData({
       isShowShare: false
     })
@@ -410,7 +417,18 @@ Page(connect({
     }
   },
 
+  onCloseAuthorizationTap(e) {
+    commonStore.changeisCloseAuthorizationModal(true)
+  },
+
   async onFavoriteTap(e) {
+    if (!this.data.isAuthorization) {
+      commonStore.changeisCloseAuthorizationModal(true)
+      setTimeout(() => {
+        commonStore.changeisCloseAuthorizationModal(false)
+      }, 100)
+      return
+    }
     let res;
     if (getIn(this.data.currentVideo, ["stared"], true)) {
       res = await commonStore.refechDoVideoUnstar({
@@ -655,6 +673,8 @@ Page(connect({
             ...this.data.trtcConfig,
             userID: getApp().globalData.openid,
             userSig: this.data.usersig
+            // userID: "2bec85f1371",
+            // userSig: "eJwtzE0LgkAUheH-MuuQ*dSr0CJBCCysDFqPzh25iCIqIUT-PUmX5znwftjzUgZvHFnCZMDZ4b-JYT*Tp40rrMF4oSKx35Nr7TCQY4nQnCstpYHtmanDVU2sYgMRiE1xGWhcPeQaON8b1KxtlfkcfWexz9VY5RYe52YO7et0S9uyyEC7QqZTc78u9ZF9f5ApMeI_"
           }
         })
 
@@ -674,8 +694,7 @@ Page(connect({
               this.trtcComponent = this.selectComponent('#trtcroom');
               this.bindTRTCRoomEvent();
               this.trtcComponent.enterRoom({
-                // roomID: parseInt(getIn(this.data.currentVideo, ["roomID"]))
-                roomID: 918
+                roomID: parseInt(getIn(this.data.currentVideo, ["roomID"]))
               }).catch((res) => {
                 console.error('room joinRoom 进房失败:', res)
               });
@@ -689,8 +708,16 @@ Page(connect({
                 success: (res) => {
                   console.log("---------wss连接成功---------", res)
                   const timer4 = setInterval(() => {
-                    this.sendSocketMessage(JSON.stringify({ type: 100 }))
-                  }, 5000)
+                    this.sendSocketMessage(JSON.stringify({
+                      type: 100,
+                      percent: 0,
+                      roomID: 0,
+                      x: 0,
+                      y: 0,
+                      width: 0,
+                      height: 0
+                    }))
+                  }, 8000)
                 },
                 fail: (res) => {
                   console.log("---------wss连接失败---------", res)
@@ -822,6 +849,14 @@ Page(connect({
     return {
       title: getIn(this.data.currentVideo, ["name"], "-"),
       path: `/pages/room/room?scene=${getIn(this.data.currentVideo, ["id"], 0)}`,
+      imageUrl: getIn(this.data.currentVideo, ["firstFrameImgSrc"], "")
+    }
+  },
+
+  onShareTimeline() {
+    return {
+      title: getIn(this.data.currentVideo, ["name"], "-"),
+      query: `scene=${getIn(this.data.currentVideo, ["id"], 0)}`,
       imageUrl: getIn(this.data.currentVideo, ["firstFrameImgSrc"], "")
     }
   },

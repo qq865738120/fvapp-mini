@@ -18,9 +18,9 @@ class Stream {
     Object.assign(this, options)
   }
   reset() {
-    if (this.playerContext) {
+    if (!this.playerContext) {
       this.playerContext.stop()
-      this.playerContext = undefined
+      this.playerContext = null
     }
     Object.assign(this, DEFAULT_PLAYER_CONFIG, {
       userID: '', // 该stream 关联的userID

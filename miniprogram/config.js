@@ -4,7 +4,7 @@ const envEnum = {
   PROD: "PROD_ENV"
 }
 
-const env = envEnum.DEV
+const env = envEnum.PROD
 
 const host = env === envEnum.DEV ? "https://fvcms-rd.iotnc.cn" : "https://fvcms.iotnc.cn"
 

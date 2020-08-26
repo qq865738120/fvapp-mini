@@ -1,5 +1,5 @@
 <!--components/authorize_popup/authorize_popup.wxml-->
-<e-modal isShow='{{ isShow && mIsShow }}' title='微信授权'>
+<e-modal isShow='{{ isShow && mIsShow }}' title='微信授权' src='/images/icon_close.png' iconWidth='48' iconHeight='48' iconLeft='580' catchclosetap='onClose'>
   <text slot='content' style='color: #666; font-size: 30rpx;'>一键授权，观看更多精彩内容～</text>
   <e-enhance-view
     bgColor='#fff'

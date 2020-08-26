@@ -11,6 +11,7 @@ import {
 } from '../../common/tools.js';
 
 let infoListTouchEvent = new WxTouchEvent();
+
 const TAG_NAME = 'TRTC-ROOM'
 const IM_GROUP_TYPE = TIM.TYPES.GRP_CHATROOM // TIM.TYPES.GRP_CHATROOM 体验版IM无数量限制，成员20个， TIM.TYPES.GRP_AVCHATROOM IM体验版最多10个，升级后无限制
 
@@ -1713,7 +1714,7 @@ Component({
     },
     _debugEnterRoom() {
       this.publishLocalVideo()
-      // this.publishLocalAudio()
+      this.publishLocalAudio()
       this.enterRoom({ roomID: this.data.config.roomID }).then(()=>{
         // 进房后开始推送视频或音频
       })

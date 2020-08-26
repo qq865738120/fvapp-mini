@@ -34,4 +34,5 @@
     <image class="logo" src="/images/logo.png"></image>
   </view>
   
+  <a-popup isShow="{{ isInit && !isAuthorization && !isCloseAuthorizationModal }}" bindclosetap='onCloseAuthorizationTap'></a-popup>
 </view>

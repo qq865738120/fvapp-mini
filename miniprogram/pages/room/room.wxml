@@ -82,7 +82,7 @@
       </e-base-button>
     </e-modal>
   </block>
-  <a-popup isShow="{{ isInit && !isAuthorization }}"></a-popup>
+  <a-popup isShow="{{ isInit && !isAuthorization && !isCloseAuthorizationModal }}" bindclosetap='onCloseAuthorizationTap'></a-popup>
 </view>
 
 <network-debug />

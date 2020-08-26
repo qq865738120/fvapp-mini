@@ -28,6 +28,7 @@ class CommonStore {
     this.userInfo = {};
     this.isInit = false; // 是否初始化完成
     this.isAuthorization = false; // 是否已授权
+    this.isCloseAuthorizationModal = false; // 是否关闭授权弹框
     this.orderField = "update_time"; // activity排序、degree为最热、update_time为最新
     this.activityListRes = {}; // activity列表
     this.activityType = {
@@ -134,14 +135,18 @@ class CommonStore {
     this.userInfo = {
       ...userInfo
     }
+    this.refechUserInfo()
   }
 
   async refechUserInfo() {
     wx.getUserInfo({
       success: async res => {
         console.log("用户信息：", res)
-        this.changeUserInfo(res.userInfo);
+        this.userInfo = {
+          ...res.userInfo
+        }
         this.changeIsAuthorization(true);
+        this.changeisCloseAuthorizationModal(true);
         await this.postUserInfo({
           nickname: res.userInfo.nickName,
           avatarUrl: res.userInfo.avatarUrl
@@ -156,7 +161,7 @@ class CommonStore {
             } else {
               this.isAuthorization = false;
             }
-            this.refechUserInfo();
+            // this.refechUserInfo();
           }
         });
       }
@@ -169,6 +174,10 @@ class CommonStore {
 
   changeIsAuthorization(isAuthorization) {
     this.isAuthorization = isAuthorization;
+  }
+
+  changeisCloseAuthorizationModal(isCloseAuthorizationModal) {
+    this.isCloseAuthorizationModal = isCloseAuthorizationModal;
   }
 
   refechAuthorization() {

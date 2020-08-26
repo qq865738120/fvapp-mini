@@ -5,11 +5,18 @@ import regeneratorRuntime from 'regenerator-runtime'
 
 const { wxPro } = getApp()
 
-import WxTouchEvent from "wx-touch-event";
+import {
+  mapToData
+} from 'minii'
+import commonStore from '../../stores/common.js';
 
-let infoListTouchEvent = new WxTouchEvent();
+const connect = mapToData((state) => ({
+  isInit: state.common.isInit,
+  isAuthorization: state.common.isAuthorization,
+  isCloseAuthorizationModal: state.common.isCloseAuthorizationModal
+}))
 
-Page({
+Page(connect({
   data: {
   },
 
@@ -17,7 +24,18 @@ Page({
     
   },
 
+  onCloseAuthorizationTap(e) {
+    commonStore.changeisCloseAuthorizationModal(true)
+  },
+
   onFavoriteTap() {
+    if (!this.data.isAuthorization) {
+      commonStore.changeisCloseAuthorizationModal(true)
+      setTimeout(() => {
+        commonStore.changeisCloseAuthorizationModal(false)
+      }, 100)
+      return
+    }
     wx.navigateTo({
       url: '/pages/favorite/favorite',
     })
@@ -35,4 +53,4 @@ Page({
     })
   }
 
-})
+}))

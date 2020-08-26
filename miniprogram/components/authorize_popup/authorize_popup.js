@@ -35,6 +35,10 @@ Component({
         commonStore.changeUserInfo(res.detail.userInfo);
         this.setData({ mIsShow: false })
       }
+    },
+
+    onClose(e) {
+      this.triggerEvent('closetap', e, { bubbles: true });
     }
   }
 })

@@ -26,6 +26,7 @@ const connect = mapToData((state) => ({
   videoListRes: state.common.videoListRes,
   apiError: state.common.apiError,
   isAuthorization: state.common.isAuthorization,
+  isCloseAuthorizationModal: state.common.isCloseAuthorizationModal
 }))
 
 let activityId = "";
@@ -50,6 +51,10 @@ Page(connect({
     wx.navigateTo({
       url: '/pages/room/room'
     })
+  },
+
+  onCloseAuthorizationTap(e) {
+    commonStore.changeisCloseAuthorizationModal(true)
   },
 
   onModalButtonTap(e) {
