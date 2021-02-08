@@ -2,7 +2,7 @@
 <!-- 在模版上放置标签 -->
 <view class="page-room {{ currentActivity.videoBgTop === -1 && 'flex-center' }}" style="background-image: url({{ currentVideo.type !== 1 && apiError[RequestUrls.video_info].errorCode !== PremitionError.NO_ACTIVE_PREMITION_1 && apiError.errorCode !== PremitionError.NO_ACTIVE_PREMITION_2 && currentActivity.videoBgImgSrc }});">
 
-  <trtc-room wx:if="{{currentVideo.type === 1 && apiError[RequestUrls.video_info].errorCode !== PremitionError.NO_ACTIVE_PREMITION_1 && apiError.errorCode !== PremitionError.NO_ACTIVE_PREMITION_2}}" id="trtcroom" config="{{trtcConfig}}" catchpinch="onPinch" catchswipe="onSwipe" catchontap="onTap" catchmove="onMove" catchondoubletap="onDoubleTap"></trtc-room>
+  <trtc-room wx:if="{{(currentVideo.type === 1 || currentVideo.type === 3) && apiError[RequestUrls.video_info].errorCode !== PremitionError.NO_ACTIVE_PREMITION_1 && apiError.errorCode !== PremitionError.NO_ACTIVE_PREMITION_2}}" id="trtcroom" config="{{trtcConfig}}" catchpinch="onPinch" catchswipe="onSwipe" catchontap="onTap" catchmove="onMove" catchondoubletap="onDoubleTap"></trtc-room>
 
   <!-- <image wx:if="{{currentVideo.type === 1 && isStop}}" class="play-icon" src="/images/icon_bofangliang.png"></image> -->
 

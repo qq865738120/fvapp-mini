@@ -15,16 +15,6 @@ import {
  */
 class CommonStore {
   constructor() {
-
-  }
-
-  async init(axios, options) {
-    console.log("options", options)
-    const {
-      scene,
-      path
-    } = options;
-    this.request = new Request(axios)
     this.userInfo = {};
     this.isInit = false; // 是否初始化完成
     this.isAuthorization = false; // 是否已授权
@@ -40,8 +30,6 @@ class CommonStore {
     this.videoListRes = {}; // video列表
     this.videoStarListRes = {}; // video收藏列表
     this.usersig = ""; // 用户进入视频房间的凭证
-    this.enterType = (scene === 1011 || scene === 1012 || scene === 1013 || scene === 1007) ? 1 : 0; // 进入类型：0-非扫码，1-扫码
-    this.enterPath = path // 扫码进入的页面
     this.pageSize = 20; // 页面大小
     this.apiError = {} // 接口错误信息
     Object.keys(RequestUrls).forEach(key => this.apiError[RequestUrls[key]] = {
@@ -49,7 +37,17 @@ class CommonStore {
       errorDesc: null
     }) // 接口错误信息初始化
     this.networkLog = [] // 接口请求log
+  }
 
+  async init(axios, options) {
+    console.log("options", options)
+    const {
+      scene,
+      path
+    } = options;
+    this.request = new Request(axios)
+    this.enterType = (scene === 1011 || scene === 1012 || scene === 1013 || scene === 1007) ? 1 : 0; // 进入类型：0-非扫码，1-扫码
+    this.enterPath = path // 扫码进入的页面
     wx.getSetting({
       success: (setting) => {
         if (setting.authSetting['scope.userInfo']) {
@@ -59,10 +57,10 @@ class CommonStore {
         }
       },
       complete: async () => {
-        await Promise.all([this.refechUserInfo(), this.refectUsersig()])
-        this.refechActivityList({
+        await Promise.all([this.refechUserInfo(), this.refectUsersig(), this.refechActivityList({
           orderField: this.orderField
-        })
+        })])
+        this.changeIsInit(true)
       }
     });
   }
@@ -272,7 +270,7 @@ class CommonStore {
    */
   async refechVideoInfo(params) {
     const res = await this.request.getVideoInfo(params);
-    console.log("res", res)
+    console.log("refechVideoInfo", res, params)
     if (res) {
       this.changeCurrentActivity(res.activity);
       this.changeCurrentVideo(res.video);

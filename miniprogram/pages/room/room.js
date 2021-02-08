@@ -9,7 +9,8 @@ import {
   px2Rpx,
   getIn,
   isNull,
-  isEmptyObj
+  randomWord,
+  formatTime
 } from '../../common/tools.js';
 import commonStore from '../../stores/common.js';
 import {
@@ -108,7 +109,7 @@ Page(connect({
       enableMic: true,
       enableAns: false,
       enableAgc: false,
-      enableIM: true,
+      enableIM: false,
       debugMode: config.env === config.envEnum.DEV ? true : false,
       enableBackgroundMute: true
     },
@@ -218,8 +219,7 @@ Page(connect({
       width: videoWidth,
       height: videoHeight
     };
-    console.log("wss message", JSON.stringify(msg))
-    this.sendSocketMessage(JSON.stringify(msg))
+    this.sendSocketMessage(msg)
   },
 
   onSwipe(e) {
@@ -259,7 +259,6 @@ Page(connect({
       height: 0
     };
     console.log("wss message", JSON.stringify(msg))
-    this.sendSocketMessage(JSON.stringify(msg))
     this.setData({
       isShowToast: true
     })
@@ -269,6 +268,7 @@ Page(connect({
       })
       timer3 = null;
     }, 1500)
+    this.sendSocketMessage(msg)
   },
 
   /**
@@ -286,7 +286,7 @@ Page(connect({
       if (orientation === ORIENTATION_TYPE.VERTICAL) {
         msg = {
           type: deltaX > 0 ? EVENT_TYPE.RIGHT : EVENT_TYPE.LEFT,
-          percent: parseInt((deltaX > 0 ? deltaX : -deltaX) / 750 * 10),
+          percent: parseInt((deltaX > 0 ? deltaX : -deltaX) / 375 * 40),
           roomID: getIn(this.data.currentVideo, ["roomID"]),
           x: 0,
           y: 0,
@@ -304,8 +304,7 @@ Page(connect({
           height: 0
         };
       }
-      console.log("wss message", JSON.stringify(msg))
-      this.sendSocketMessage(JSON.stringify(msg))
+      this.sendSocketMessage(msg)
     }
   },
 
@@ -548,13 +547,72 @@ Page(connect({
    * 发送手势数据
    */
   sendSocketMessage(msg) {
+
+    const myMsg = getIn(this.data.currentVideo, ["type"]) === 3 ? {
+      transactionId: randomWord(),
+      service: 'VIDEO_EFFECT',
+      sendTime: formatTime(new Date(), 'yyyy-MM-dd hh:mm:ss'),
+      data: {
+        fvsCode: this.data.currentVideo.fvsCode,
+        ...msg
+      }
+    } : msg
+    console.log("wss message", JSON.stringify(myMsg))
     if (socketOpen) {
       wx.sendSocketMessage({
-        data: msg
+        data: JSON.stringify(myMsg)
       })
     } else {
-      socketMsgQueue.push(msg)
+      socketMsgQueue.push(JSON.stringify(myMsg))
     }
+  },
+
+  /**
+   * 初始化手势连接
+   */
+  initSocket(url) {
+    /**
+     * 连接手势wss
+     */
+    console.log("----------wss开始连接----------")
+    socketTask = wx.connectSocket({
+      url: url,
+      success: (res) => {
+        console.log("---------wss连接成功---------", res)
+        timer4 = setInterval(() => {
+          this.sendSocketMessage({
+            type: 100,
+            percent: 0,
+            roomID: getIn(this.data.currentVideo, ["roomID"]),
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+          })
+        }, 8000)
+      },
+      fail: (res) => {
+        console.log("---------wss连接失败---------", res)
+      }
+    })
+    socketTask.onClose(function (res) {
+      console.log('WebSocket 已关闭！')
+    })
+    socketTask.onError(res => {
+      console.log("-------wss出现错误--------", res)
+      wx.showToast({
+        title: '手势连接失败，请检查网络。',
+        icon: 'none'
+      })
+    })
+    socketTask.onOpen(function (res) {
+      console.log("----------wss管道打开成功----------", res)
+      socketOpen = true
+      for (let i = 0; i < socketMsgQueue.length; i++) {
+        this.sendSocketMessage(socketMsgQueue[i])
+      }
+      socketMsgQueue = []
+    })
   },
 
   /**
@@ -691,6 +749,7 @@ Page(connect({
           if (getIn(this.data.currentVideo, ["roomID"])) {
             clearInterval(timer2);
             if (getIn(this.data.currentVideo, ["type"]) === 1) {
+              // 自由视点
               this.trtcComponent = this.selectComponent('#trtcroom');
               this.bindTRTCRoomEvent();
               this.trtcComponent.enterRoom({
@@ -699,62 +758,26 @@ Page(connect({
                 console.error('room joinRoom 进房失败:', res)
               });
 
-              /**
-               * 连接手势wss
-               */
-              console.log("----------wss开始连接----------")
-              socketTask = wx.connectSocket({
-                url: config.wssHost,
-                success: (res) => {
-                  console.log("---------wss连接成功---------", res)
-                  const timer4 = setInterval(() => {
-                    this.sendSocketMessage(JSON.stringify({
-                      type: 100,
-                      percent: 0,
-                      roomID: 0,
-                      x: 0,
-                      y: 0,
-                      width: 0,
-                      height: 0
-                    }))
-                  }, 8000)
-                },
-                fail: (res) => {
-                  console.log("---------wss连接失败---------", res)
-                }
-              })
-              socketTask.onClose(function (res) {
-                console.log('WebSocket 已关闭！')
-              })
-              socketTask.onError(res => {
-                console.log("-------wss出现错误--------", res)
-                wx.showToast({
-                  title: '手势连接失败，请检查网络。',
-                  icon: 'none'
-                })
-              })
-              socketTask.onOpen(function (res) {
-                console.log("----------wss管道打开成功----------", res)
-                socketOpen = true
-                for (let i = 0; i < socketMsgQueue.length; i++) {
-                  this.sendSocketMessage(socketMsgQueue[i])
-                }
-                socketMsgQueue = []
-              })
+              this.initSocket(config.wssHost)
+            } else if (getIn(this.data.currentVideo, ["type"]) === 3) {
+              // 直播
+              this.trtcComponent = this.selectComponent('#trtcroom');
+
+              this.bindTRTCRoomEvent();
+              this.trtcComponent.enterRoom({
+                roomID: parseInt(getIn(this.data.currentVideo, ["roomID"]))
+              }).catch((res) => {
+                console.error('room joinRoom 进房失败:', res)
+              });
+
+              if (this.data.currentVideo.remoteControlStatus === 1) {
+                this.initSocket(config.wssHostLive + getApp().globalData.openid)
+              }
             }
           }
         }, 100)
       }
     }, 100);
-
-    // const timer2 = setInterval(() => {
-    //   if (!isEmptyObj(this.data.currentVideo)) {
-    //     clearInterval(timer2);
-    //     this.setData({
-    //       imgData: new LastMayday().palette(this.data.currentVideo)
-    //     })
-    //   }
-    // }, 500)
   },
 
   onShow() {
@@ -876,11 +899,22 @@ Page(connect({
       clearInterval(timer2);
       timer2 = undefined;
     }
+    if (timer3) {
+      clearInterval(timer3);
+      timer3 = undefined;
+    }
     if (timer4) {
       clearInterval(timer4);
       timer4 = undefined;
     }
+    videoId = undefined
+    socketOpen = false
+    socketMsgQueue = []
     if (this.trtcComponent) {
+      videoDetail && this.trtcComponent.unsubscribeRemoteAudio({
+        userID: videoDetail.userID,
+        streamType: videoDetail.streamType,
+      })
       this.trtcComponent = null;
     }
     wx.stopAccelerometer()

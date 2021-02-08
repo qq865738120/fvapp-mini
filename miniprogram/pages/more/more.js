@@ -95,7 +95,9 @@ Page(connect({
       activityId = scene;
       console.log("activityId", activityId)
     }
+  },
 
+  onShow() {
     currentPage = 1;
     if (this.data.currentActivity) {
       wx.setNavigationBarTitle({
@@ -127,12 +129,14 @@ Page(connect({
     }, 100);
   },
 
-  onShow() {
-    
+  onHide() {
+
   },
 
   onUnload () {
     searchVal = ""
+    activityId = "";
+    currentPage = 1;
   },
 
   onShareAppMessage() {

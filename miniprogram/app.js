@@ -110,7 +110,14 @@ App({
     } catch (e) {
       console.log(e);
     }
-    commonStore.changeIsInit(true);
     wx.hideNavigationBarLoading()
+
+    wx.onAppHide((res) => {
+      // commonStore.changeIsInit(false)
+    })
+
+    wx.onAppShow(async (result) => {
+      // await commonStore.init($axios, options);
+    })
   }
 })
